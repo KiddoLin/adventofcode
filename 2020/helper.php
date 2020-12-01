@@ -2,15 +2,19 @@
 
 require_once('./Coder.php');
 
-function dd($data)
+function dd(...$args)
 {
-    dump($data);
+    foreach ($args as $arg) {
+        dump($arg);
+    }
     exit();
 }
 
-function dump($data)
+function dump(...$args)
 {
-    print_r($data);
+    foreach ($args as $arg) {
+        print_r($arg);
+    }
     echo PHP_EOL;
 }
 
