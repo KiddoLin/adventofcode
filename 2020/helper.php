@@ -18,4 +18,9 @@ function dump(...$args)
     echo PHP_EOL;
 }
 
-
+function loadData(int $no)
+{
+    $str = require_once("./{$no}.php");
+    $data = explode(PHP_EOL, $str);
+    return $data;
+}

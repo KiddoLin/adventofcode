@@ -19,6 +19,8 @@ class Coder
 
     public function getTargetNums(array $data, int $chunk, int $num = 2020): array
     {
+        $this->targetData = [];
+
         $this->rollFetch($data, $chunk);
 
         foreach ($this->targetData as $args) {

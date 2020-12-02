@@ -200,6 +200,4 @@ $str = '1933
 675
 1520';
 
-$data = explode(PHP_EOL, $str);
-
-return $data;
+return $str;

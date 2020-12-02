@@ -2,7 +2,7 @@
 ini_set('memory_limit', '800M');
 require_once('./helper.php');
 
-$data = require_once('./1.php');
+$data = loadData(1);
 
 $coder = new Coder($data);
 
