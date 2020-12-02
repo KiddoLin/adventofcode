@@ -3,21 +3,21 @@
 
 class Coder
 {
-    public $sourceData;
-    public $targetData = [];
+    protected $sourceData;
+    protected $targetData = [];
 
     public function __construct(array $sourceData = [])
     {
         $this->sourceData = $sourceData;
     }
 
-    public function getProduct(int $chunk = 2): float
+    public function getProduct(int $chunk = 3): float
     {
         $data = $this->getTargetNums($this->sourceData, $chunk);
         return array_product($data);
     }
 
-    public function getTargetNums(array $data, int $chunk, int $num = 2020): array
+    protected function getTargetNums(array $data, int $chunk, int $num = 2020): array
     {
         $this->targetData = [];
 
@@ -33,7 +33,7 @@ class Coder
         return [];
     }
 
-    public function rollFetch(array $data, int $chunk, int $index = 0, $args = [])
+    protected function rollFetch(array $data, int $chunk, int $index = 0, $args = [])
     {
         $num = count($args);
         $len = count($data);
