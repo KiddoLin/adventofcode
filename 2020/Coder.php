@@ -103,4 +103,58 @@ class Coder
         $max--;
         return $code[$min] == $keyword xor $code[$max] == $keyword;
     }
+
+    public function getTotalTrees($way = 2)
+    {
+        $data = $this->getRunningWayStep($way);
+        $trees = array_filter($data, function ($v) {
+            return $v == '#';
+        });
+        $num = count($trees);
+        return $num;
+    }
+
+    public function getTotalTreeProduct()
+    {
+        $total = 1;
+        for ($way = 1; $way <= 5; $way++) {
+            $num = $this->getTotalTrees($way);
+            $total = $total * $num;
+        }
+        return $total;
+    }
+
+    protected function getRunningWayStep(int $way)
+    {
+        $this->targetData = $this->sourceData;
+
+        $data = [];
+        $num = 0;
+
+        $ig = false;
+
+        foreach ($this->targetData as $v) {
+            if ($ig) {
+                $ig = false;
+            } else {
+                $len = strlen($v);
+                $i = $num % $len;
+                $data[] = $v[$i];
+
+                if ($way == 1) {
+                    $num++;
+                } elseif ($way == 2) {
+                    $num += 3;
+                } elseif ($way == 3) {
+                    $num += 5;
+                } elseif ($way == 4) {
+                    $num += 7;
+                } elseif ($way == 5) {
+                    $num++;
+                    $ig = true;
+                }
+            }
+        }
+        return $data;
+    }
 }
