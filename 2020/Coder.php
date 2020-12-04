@@ -157,4 +157,79 @@ class Coder
         }
         return $data;
     }
+
+    public function getDay4($part = 2)
+    {
+        $this->initToPassportData();
+        $validPassports = $this->getValidPassports($part == 2);
+        return count($validPassports);
+    }
+
+    protected function initToPassportData()
+    {
+        $this->targetData = [];
+
+        $i = 0;
+        foreach ($this->sourceData as $str) {
+            if (empty($str)) {
+                $i++;
+            } else {
+                $items = explode(' ', $str);
+                array_walk($items, function ($item) use ($i) {
+                    [$key, $val] = explode(':', $item);
+                    $this->targetData[$i][$key] = $val;
+                });
+            }
+        }
+    }
+
+    protected function getValidPassports(bool $isHard = true)
+    {
+        $must = ['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid'];
+
+        $validPassports = [];
+        foreach ($this->targetData as $passport) {
+            $keys = array_keys($passport);
+            $intersectKeys = array_intersect($must, $keys);
+            if (count($intersectKeys) == 7) {
+                if (!$isHard || $this->checkPassport($passport)) {
+                    $validPassports[] = $passport;
+                }
+            }
+        }
+
+        return $validPassports;
+    }
+
+    protected function checkPassport(array $passport)
+    {
+        $byr = $passport['byr'] ?? null;
+        $iyr = $passport['iyr'] ?? null;
+        $eyr = $passport['eyr'] ?? null;
+        $hgt = $passport['hgt'] ?? null;
+        $hcl = $passport['hcl'] ?? null;
+        $ecl = $passport['ecl'] ?? null;
+        $pid = $passport['pid'] ?? null;
+        if ($byr < 1920 || $byr > 2002) return false;
+        if ($iyr < 2010 || $iyr > 2020) return false;
+        if ($eyr < 2020 || $eyr > 2030) return false;
+        $intHgt = intval($hgt);
+        if (strripos($hgt, 'cm') !== false) {
+            if ($intHgt < 150 || $intHgt > 193) return false;
+        } elseif (strripos($hgt, 'in') !== false) {
+            if ($intHgt < 59 || $intHgt > 76) return false;
+        } else {
+            return false;
+        }
+        if (preg_match('/^#[0-9a-f]{6}$/i', $hcl) < 1) {
+            return false;
+        }
+        if (!in_array($ecl, ['amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth'])) {
+            return false;
+        }
+        if (preg_match('/^[0-9]{9}$/', $pid) < 1) {
+            return false;
+        }
+        return true;
+    }
 }
