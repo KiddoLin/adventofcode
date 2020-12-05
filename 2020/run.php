@@ -2,7 +2,7 @@
 ini_set('memory_limit', '800M');
 require_once('./helper.php');
 
-$data = loadData(4);
+$data = loadData(5);
 
 $coder = new Coder($data);
 
@@ -15,7 +15,10 @@ $coder = new Coder($data);
 //$part1 = $coder->getTotalTrees(); // 254
 //$part2 = $coder->getTotalTreeProduct(); // 1666768320
 
-$part1 = $coder->getDay4(1); // 254;
-$part2 = $coder->getDay4(); // 133
+//$part1 = $coder->getDay4(1); // 254;
+//$part2 = $coder->getDay4(); // 133
+
+$part1 = $coder->getMaxBoardingPassId(); // 922;
+$part2 = $coder->getMyBoardingPassId(); // 747
 
 dd($part1, $part2);

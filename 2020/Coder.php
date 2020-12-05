@@ -232,4 +232,89 @@ class Coder
         }
         return true;
     }
+
+    protected function initToBoardingData()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            $str1 = substr($str, 0, 7);
+            $str2 = substr($str, -3);
+
+            $row = $this->getBoardingInfoItem($str1, 0, 127);
+            $column = $this->getBoardingInfoItem($str2, 0, 7);
+            $id = ($row * 8) + $column;
+
+            $this->targetData[] = [
+                'row' => intval($row),
+                'column' => intval($column),
+                'id' => intval($id),
+            ];
+        }
+    }
+
+    protected function getBoardingInfoItem(string $str, $min = 0, $max = 127)
+    {
+        $ops = str_split($str);
+
+        $isMax = false;
+        foreach ($ops as $op) {
+            $isMax = in_array($op, ['B', 'R']);
+            $med = ceil(($max - $min) / 2);
+            if ($isMax) {
+                $min += $med;
+            } else {
+                $max -= $med;
+            }
+        }
+        return $isMax ? $max : $min;
+    }
+
+    public function getMaxBoardingPassId()
+    {
+        $this->initToBoardingData();
+        $ids = $this->getColumnsOfBoardingPass('id');
+        return max($ids);
+    }
+
+    public function getMyBoardingPassId()
+    {
+        $all = $this->fetchMissingBoardingPasses();
+        $data = array_pop($all);
+        return $data['id'] ?? null;
+    }
+
+    protected function fetchMissingBoardingPasses()
+    {
+        $ids = $this->getColumnsOfBoardingPass('id');
+        $rows = $this->getColumnsOfBoardingPass('row');
+        $columns = $this->getColumnsOfBoardingPass('column');
+
+        $data = [];
+        foreach ($rows as $row) {
+            foreach ($columns as $column) {
+                $id = $row * 8 + $column;
+                if (in_array($id, $ids)) {
+                    continue;
+                }
+                $nears = [$id - 1, $id + 1];
+                $intersect = array_intersect($nears, $ids);
+                if (count($intersect) == 2) {
+                    $data[] = [
+                        'row' => $row,
+                        'column' => $column,
+                        'id' => $id,
+                    ];
+                }
+            }
+        }
+        return $data;
+    }
+
+    protected function getColumnsOfBoardingPass(string $index)
+    {
+        $arr = array_unique(array_column($this->targetData, $index));
+        sort($arr);
+        return $arr;
+    }
 }
