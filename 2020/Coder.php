@@ -317,4 +317,46 @@ class Coder
         sort($arr);
         return $arr;
     }
+
+    public function getDay6($part = 2)
+    {
+        $this->initDataToForms();
+        $data = $this->uniqueFormAnswers($part == 2);
+        $total = 0;
+        foreach ($data as $answers) {
+            $total += count($answers);
+        }
+        return $total;
+    }
+
+    protected function initDataToForms()
+    {
+        $this->targetData = [];
+
+        $i = 0;
+        foreach ($this->sourceData as $str) {
+            if (empty($str)) {
+                $i++;
+            } else {
+                $this->targetData[$i][] = str_split($str);
+            }
+        }
+    }
+
+    protected function uniqueFormAnswers(bool $intersect = true)
+    {
+        $data = [];
+        foreach ($this->targetData as $group) {
+            $temp = [];
+            foreach ($group as $i => $form) {
+                if ($intersect) {
+                    $temp = $i ? array_intersect($form, $temp) : $form;
+                } else {
+                    $temp = array_merge($temp, $form);
+                }
+            }
+            $data[] = array_unique($temp);
+        }
+        return $data;
+    }
 }
