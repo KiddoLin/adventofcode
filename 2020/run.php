@@ -2,7 +2,7 @@
 ini_set('memory_limit', '800M');
 require_once('./helper.php');
 
-$data = loadData(6);
+$data = loadData(7);
 
 $coder = new Coder($data);
 
@@ -21,7 +21,7 @@ $coder = new Coder($data);
 //$part1 = $coder->getMaxBoardingPassId(); // 922
 //$part2 = $coder->getMyBoardingPassId(); // 747
 
-$part1 = $coder->getDay6(1); // 6521
-$part2 = $coder->getDay6(2); // 3305
+$part1 = $coder->getBagTotalParents(); // 268
+$part2 = $coder->getBagTotalChildren(); // 7867
 
 dd($part1, $part2);

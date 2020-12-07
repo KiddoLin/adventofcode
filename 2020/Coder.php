@@ -359,4 +359,87 @@ class Coder
         }
         return $data;
     }
+
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
+    public function getBagTotalParents($bag = 'shiny gold')
+    {
+        $this->initDataToBagRules();
+        $data = $this->getBagRules($bag);
+        return count($data);
+    }
+
+    public function getBagTotalChildren($bag = 'shiny gold')
+    {
+        $total = 0;
+        foreach ($this->targetData[$bag] as $name => $num) {
+            $total += $num;
+            $childTotal = $this->getBagTotalChildren($name);
+            $total += ($num * $childTotal);
+        }
+        return $total;
+    }
+
+    protected function initDataToBagRules()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            $str = str_replace('.', '', $str);
+            [$name, $rule] = explode(' contain ', $str);
+            $name = $this->initBagName($name);
+            $children = [];
+            if (intval($rule)) {
+                $items = explode(', ', $rule);
+                foreach ($items as $item) {
+                    $num = intval($item);
+                    $childName = str_replace("{$num} ", '', $item);
+                    $childName = $this->initBagName($childName);
+                    $children[$childName] = $num;
+                }
+            }
+            if (isset($this->targetData[$name])) {
+                dd('exit');
+            }
+            $this->targetData[$name] = $children;
+        }
+    }
+
+    protected function initBagName(string $name) 
+    {
+        $name = str_replace(' bags', '', $name);
+        $name = str_replace(' bag', '', $name);
+        return $name;
+    }
+
+    protected function getBagRules(string $bag)
+    {
+        $data = [];
+        foreach ($this->targetData as $name => $children) {
+            if ($this->checkBagInChildren($children, $bag)) {
+                $data[] = $name;
+            }
+        }
+        return $data;
+    }
+
+    protected function checkBagInChildren(array $rules, string $bag)
+    {
+        if (count($rules) < 1) {
+            return false;
+        }
+        if (isset($rules[$bag])) {
+            return true;
+        }
+        foreach ($rules as $name => $num) {
+            if ($this->checkBagInChildren($this->targetData[$name], $bag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
