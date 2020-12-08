@@ -442,4 +442,95 @@ class Coder
         return false;
     }
 
+    public function getDay8($part = 1)
+    {
+        $this->initDataToAccumulator();
+
+        if ($part == 1) {
+            $value = $this->getValueBeforeAccumulatorLoop();
+        } else {
+            $value = $this->getValueOfFixedAccumulator();
+        }
+        return $value;
+    }
+
+    protected function initDataToAccumulator()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            [$op, $num] = explode(' ', $str);
+            $this->targetData[] = [
+                'op' => $op,
+                'num' => intval($num),
+            ];
+        }
+    }
+
+    protected function getValueBeforeAccumulatorLoop()
+    {
+        try {
+            $value = $this->runAccumulator($this->targetData);
+        } catch (\Exception $e) {
+            $value = $e->getCode();
+        }
+        return $value;
+    }
+
+    protected function getValueOfFixedAccumulator()
+    {
+        $value = null;
+        foreach ($this->targetData as $i => $item) {
+            $op = $item['op'];
+            if (in_array($op, ['jmp', 'nop'])) {
+                $data = $this->targetData;
+                $data[$i]['op'] = $op == 'jpm' ? 'nop' : 'nop';
+                try {
+                    $value = $this->runAccumulator($data);
+                    dump("Fix item {$i} " . json_encode($item));
+                } catch (\Exception $e) {
+                    //
+                }
+            }
+        }
+        return $value;
+    }
+
+    protected function runAccumulator(array $ops, int $times = 1)
+    {
+        $data = 0;
+
+        $total = count($ops);
+
+        $i = 0;
+
+        $runIds = [];
+
+        do {
+            for ($i = $i; $i < $total; $i++) {
+                if (isset($runIds[$i])) {
+                    $runIds[$i]++;
+                } else {
+                    $runIds[$i] = 0;
+                }
+
+                $item = $ops[$i];
+
+                if ($times > 0 && $runIds[$i] >= $times) {
+                    throw new \Exception('Over loop times', $data);
+                }
+                
+                if ($item['op'] == 'acc') {
+                    $data += $item['num'];
+                } elseif ($item['op'] == 'jmp') {
+                    $i = $i + $item['num'];
+                    break;
+                } else {
+                    // dump($item['op']); nop
+                }
+            }
+        } while ($i < $total);
+
+        return $data;
+    }
 }
