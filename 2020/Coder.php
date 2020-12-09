@@ -533,4 +533,67 @@ class Coder
 
         return $data;
     }
+
+    public function getDay9()
+    {
+        $this->initDataToXMAS();
+        $data = $this->fetchFirstNumberAfterPreamble();
+        return $data;
+    }
+
+    public function fetchEncryptedNumberOfXMAS($num = 15690279)
+    {
+        $len = array_search($num, $this->targetData);
+
+        $arr = array_slice($this->targetData, 0, $len);
+
+        for ($chunk = 2; $chunk <= $len; $chunk++) {
+            for ($i = 0; $i < $len - $chunk; $i++) {
+                $temp = array_slice($arr, $i, $chunk);
+                if (array_sum($temp) == $num) {
+                    $min = min($temp);
+                    $max = max($temp);
+                    $data = $min + $max;
+                    return $data;
+                }
+            }
+        }
+       return null;
+    }
+
+    protected function initDataToXMAS()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            $this->targetData[] = intval($str);
+        }
+    }
+
+    protected function fetchFirstNumberAfterPreamble($index = 25)
+    {
+        $total = count($this->targetData);
+
+        for ($i = $index; $i < $total; $i++) {
+            $num = $this->targetData[$i];
+            $arr = array_slice($this->targetData, 0, $i);
+            if (!$this->isValidNUmberOfXMAS($arr, $num)) {
+                return $num;
+            }
+        }
+        return null;
+    }
+
+    protected function isValidNUmberOfXMAS(array $arr, int $num)
+    {
+        $total = count($arr);
+        for ($i = 0; $i < $total - 1; $i++) {
+            for ($j = $i + 1; $j < $total; $j++) {
+                if ($arr[$i] + $arr[$j] == $num) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

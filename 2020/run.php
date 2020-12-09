@@ -2,7 +2,7 @@
 ini_set('memory_limit', '800M');
 require_once('./helper.php');
 
-$data = loadData(8);
+$data = loadData(9);
 
 $coder = new Coder($data);
 
@@ -24,7 +24,10 @@ $coder = new Coder($data);
 // $part1 = $coder->getBagTotalParents(); // 268
 // $part2 = $coder->getBagTotalChildren(); // 7867
 
-$part1 = $coder->getDay8(1); // 1675
-$part2 = $coder->getDay8(2); // 1532
+// $part1 = $coder->getDay8(1); // 1675
+// $part2 = $coder->getDay8(2); // 1532
+
+$part1 = $coder->getDay9(); // 15690279
+$part2 = $coder->fetchEncryptedNumberOfXMAS(); // 2174232
 
 dd($part1, $part2);
