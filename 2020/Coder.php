@@ -3,27 +3,111 @@
 
 class Coder
 {
-    protected $sourceData;
+    protected $day;
+    protected $sourceData = [];
     protected $targetData = [];
+    protected $answerData = [];
 
-    public function __construct(array $sourceData = [])
+    public function __construct($day)
     {
-        $this->sourceData = $sourceData;
+        $this->init($day);
     }
 
-    public function getProduct(int $chunk = 3): float
+    protected function init($day)
     {
-        $data = $this->getTargetNums($this->sourceData, $chunk);
+        $this->day = intval($day);
+        $this->sourceData = loadData($this->day);
+        // reset
+        $this->targetData = [];
+        // init for target day
+        $method = "init{$this->day}";
+        if (method_exists($this, $method)) {
+            $this->$method();
+        }
+    }
+
+    protected function initInteger()
+    {
+        foreach ($this->sourceData as $str) {
+            $this->targetData[] = intval($str);
+        }
+    }
+
+    public function run($day = null)
+    {
+        if ($day) {
+            $this->init($day);
+        }
+
+        $part1 = $this->runPart1();
+        $part2 = $this->runPart2();
+
+        return [$part1, $part2];
+    }
+
+    public function runPart1($day = null)
+    {
+        if ($day) {
+            $this->init($day);
+        }
+
+        $part1 = '';
+        $method1 = "run{$this->day}Part1";
+        if (method_exists($this, $method1)) {
+            $part1 = $this->$method1();
+        }
+        return $part1;
+    }
+
+    public function runPart2($day = null)
+    {
+        if ($day) {
+            $this->init($day);
+        }
+
+        $part2 = '';
+        $method2 = "run{$this->day}Part2";
+        if (method_exists($this, $method2)) {
+            $part2 = $this->$method2();
+        }
+        return $part2;
+    }
+
+    protected function init1()
+    {
+        $this->initInteger();
+    }
+
+    protected function run1Part1()
+    {
+        return $this->getProduct(2); // 605364
+    }
+
+    protected function run1Part2()
+    {
+        return $this->getProduct(3); // 128397680
+    }
+
+    protected function getProduct(int $chunk = 3): float
+    {
+        $data = $this->getTargetNums($this->targetData, $chunk);
         return array_product($data);
     }
 
+    /**
+     * Day 1 temp data
+     *
+     * @var array
+     */
+    protected $day1Array = [];
+
     protected function getTargetNums(array $data, int $chunk, int $num = 2020): array
     {
-        $this->targetData = [];
+        $this->day1Array = [];
 
         $this->rollFetch($data, $chunk);
 
-        foreach ($this->targetData as $args) {
+        foreach ($this->day1Array as $args) {
             $total = array_sum($args);
             if ($total == $num) {
                 return $args;
@@ -42,17 +126,15 @@ class Coder
         for ($i = $index; $i <= $len - $chunk + $num; $i++) {
             $args[$index] = $data[$i];
             if ($isTarget) {
-                $this->targetData[] = $args;
+                $this->day1Array[] = $args;
             } else {
                 $this->rollFetch($data, $chunk, $i + 1, $args);
             }
         }
     }
 
-    protected function toPasswordData()
+    protected function init2()
     {
-        $this->targetData = [];
-
         foreach ($this->sourceData as $str) {
             [$min, $max, $keyword, $temp, $code] = preg_split("/[:\s\-]/", $str);
             $this->targetData[] = [
@@ -64,9 +146,18 @@ class Coder
         }
     }
 
-    public function getTotalPassword($part = 2)
+    protected function run2Part1()
     {
-        $this->toPasswordData();
+        return $this->getTotalPassword(1); // 477
+    }
+
+    protected function run2Part2()
+    {
+        return $this->getTotalPassword(2); // 686
+    }
+
+    protected function getTotalPassword($part)
+    {
         $list = $this->getPasswords($part);
         return count($list);
     }
@@ -104,7 +195,27 @@ class Coder
         return $code[$min] == $keyword xor $code[$max] == $keyword;
     }
 
-    public function getTotalTrees($way = 2)
+    protected function init3()
+    {
+        $this->targetData = $this->sourceData;
+    }
+
+    protected function run3Part1()
+    {
+        return $this->getTotalTrees(); // 254
+    }
+
+    protected function run3Part2()
+    {
+        $total = 1;
+        for ($way = 1; $way <= 5; $way++) {
+            $num = $this->getTotalTrees($way);
+            $total = $total * $num;
+        }
+        return $total; // 1666768320
+    }
+
+    protected function getTotalTrees($way = 2)
     {
         $data = $this->getRunningWayStep($way);
         $trees = array_filter($data, function ($v) {
@@ -114,20 +225,8 @@ class Coder
         return $num;
     }
 
-    public function getTotalTreeProduct()
-    {
-        $total = 1;
-        for ($way = 1; $way <= 5; $way++) {
-            $num = $this->getTotalTrees($way);
-            $total = $total * $num;
-        }
-        return $total;
-    }
-
     protected function getRunningWayStep(int $way)
     {
-        $this->targetData = $this->sourceData;
-
         $data = [];
         $num = 0;
 
@@ -158,17 +257,8 @@ class Coder
         return $data;
     }
 
-    public function getDay4($part = 2)
+    protected function init4()
     {
-        $this->initToPassportData();
-        $validPassports = $this->getValidPassports($part == 2);
-        return count($validPassports);
-    }
-
-    protected function initToPassportData()
-    {
-        $this->targetData = [];
-
         $i = 0;
         foreach ($this->sourceData as $str) {
             if (empty($str)) {
@@ -181,6 +271,18 @@ class Coder
                 });
             }
         }
+    }
+
+    protected function run4Part1()
+    {
+        $validPassports = $this->getValidPassports(false);
+        return count($validPassports); // 245
+    }
+
+    protected function run4Part2()
+    {
+        $validPassports = $this->getValidPassports(true);
+        return count($validPassports); // 133
     }
 
     protected function getValidPassports(bool $isHard = true)
@@ -233,10 +335,8 @@ class Coder
         return true;
     }
 
-    protected function initToBoardingData()
+    protected function init5()
     {
-        $this->targetData = [];
-
         foreach ($this->sourceData as $str) {
             $str1 = substr($str, 0, 7);
             $str2 = substr($str, -3);
@@ -270,18 +370,24 @@ class Coder
         return $isMax ? $max : $min;
     }
 
-    public function getMaxBoardingPassId()
+    protected function run5Part1()
     {
-        $this->initToBoardingData();
         $ids = $this->getColumnsOfBoardingPass('id');
-        return max($ids);
+        return max($ids); // 922
     }
 
-    public function getMyBoardingPassId()
+    protected function run5Part2()
     {
         $all = $this->fetchMissingBoardingPasses();
         $data = array_pop($all);
-        return $data['id'] ?? null;
+        return $data['id'] ?? null; // 747
+    }
+
+    protected function getColumnsOfBoardingPass(string $index)
+    {
+        $arr = array_unique(array_column($this->targetData, $index));
+        sort($arr);
+        return $arr;
     }
 
     protected function fetchMissingBoardingPasses()
@@ -311,28 +417,8 @@ class Coder
         return $data;
     }
 
-    protected function getColumnsOfBoardingPass(string $index)
+    protected function init6()
     {
-        $arr = array_unique(array_column($this->targetData, $index));
-        sort($arr);
-        return $arr;
-    }
-
-    public function getDay6($part = 2)
-    {
-        $this->initDataToForms();
-        $data = $this->uniqueFormAnswers($part == 2);
-        $total = 0;
-        foreach ($data as $answers) {
-            $total += count($answers);
-        }
-        return $total;
-    }
-
-    protected function initDataToForms()
-    {
-        $this->targetData = [];
-
         $i = 0;
         foreach ($this->sourceData as $str) {
             if (empty($str)) {
@@ -341,6 +427,20 @@ class Coder
                 $this->targetData[$i][] = str_split($str);
             }
         }
+    }
+
+    protected function run6Part1()
+    {
+        $answers = $this->uniqueFormAnswers(false);
+        $data = $this->countArray($answers);
+        return $data; // 6521
+    }
+
+    protected function run6Part2()
+    {
+        $answers = $this->uniqueFormAnswers(true);
+        $data = $this->countArray($answers);
+        return $data; // 3305
     }
 
     protected function uniqueFormAnswers(bool $intersect = true)
@@ -360,33 +460,17 @@ class Coder
         return $data;
     }
 
-    /**
-     * Undocumented function
-     *
-     * @return void
-     */
-    public function getBagTotalParents($bag = 'shiny gold')
-    {
-        $this->initDataToBagRules();
-        $data = $this->getBagRules($bag);
-        return count($data);
-    }
-
-    public function getBagTotalChildren($bag = 'shiny gold')
+    protected function countArray(array $data)
     {
         $total = 0;
-        foreach ($this->targetData[$bag] as $name => $num) {
-            $total += $num;
-            $childTotal = $this->getBagTotalChildren($name);
-            $total += ($num * $childTotal);
+        foreach ($data as $val) {
+            $total += count($val);
         }
         return $total;
     }
 
-    protected function initDataToBagRules()
+    protected function init7()
     {
-        $this->targetData = [];
-
         foreach ($this->sourceData as $str) {
             $str = str_replace('.', '', $str);
             [$name, $rule] = explode(' contain ', $str);
@@ -413,6 +497,18 @@ class Coder
         $name = str_replace(' bags', '', $name);
         $name = str_replace(' bag', '', $name);
         return $name;
+    }
+
+    protected function run7Part1()
+    {
+        $data = $this->getBagRules('shiny gold');
+        return count($data); // 268
+    }
+
+    protected function run7Part2()
+    {
+        $total = $this->getBagTotalChildren('shiny gold');
+        return $total; // 7867
     }
 
     protected function getBagRules(string $bag)
@@ -442,22 +538,19 @@ class Coder
         return false;
     }
 
-    public function getDay8($part = 1)
+    protected function getBagTotalChildren($bag)
     {
-        $this->initDataToAccumulator();
-
-        if ($part == 1) {
-            $value = $this->getValueBeforeAccumulatorLoop();
-        } else {
-            $value = $this->getValueOfFixedAccumulator();
+        $total = 0;
+        foreach ($this->targetData[$bag] as $name => $num) {
+            $total += $num;
+            $childTotal = $this->getBagTotalChildren($name);
+            $total += ($num * $childTotal);
         }
-        return $value;
+        return $total;
     }
 
-    protected function initDataToAccumulator()
+    protected function init8()
     {
-        $this->targetData = [];
-
         foreach ($this->sourceData as $str) {
             [$op, $num] = explode(' ', $str);
             $this->targetData[] = [
@@ -467,17 +560,17 @@ class Coder
         }
     }
 
-    protected function getValueBeforeAccumulatorLoop()
+    protected function run8Part1()
     {
         try {
             $value = $this->runAccumulator($this->targetData);
         } catch (\Exception $e) {
             $value = $e->getCode();
         }
-        return $value;
+        return $value; // 1675
     }
 
-    protected function getValueOfFixedAccumulator()
+    protected function run8Part2()
     {
         $value = null;
         foreach ($this->targetData as $i => $item) {
@@ -493,7 +586,7 @@ class Coder
                 }
             }
         }
-        return $value;
+        return $value; // 1532
     }
 
     protected function runAccumulator(array $ops, int $times = 1)
@@ -519,7 +612,7 @@ class Coder
                 if ($times > 0 && $runIds[$i] >= $times) {
                     throw new \Exception('Over loop times', $data);
                 }
-                
+
                 if ($item['op'] == 'acc') {
                     $data += $item['num'];
                 } elseif ($item['op'] == 'jmp') {
@@ -534,43 +627,24 @@ class Coder
         return $data;
     }
 
-    public function getDay9()
+    protected function init9()
     {
-        $this->initDataToXMAS();
-        $data = $this->fetchFirstNumberAfterPreamble();
-        return $data;
+        $this->initInteger();
     }
 
-    public function fetchEncryptedNumberOfXMAS($num = 15690279)
+    protected function run9Part1()
     {
-        $len = array_search($num, $this->targetData);
-
-        $arr = array_slice($this->targetData, 0, $len);
-
-        for ($chunk = 2; $chunk <= $len; $chunk++) {
-            for ($i = 0; $i < $len - $chunk; $i++) {
-                $temp = array_slice($arr, $i, $chunk);
-                if (array_sum($temp) == $num) {
-                    $min = min($temp);
-                    $max = max($temp);
-                    $data = $min + $max;
-                    return $data;
-                }
-            }
-        }
-       return null;
+        $data = $this->fetchFirstNumberAfterPreamble(25);
+        return $data; // 15690279
     }
 
-    protected function initDataToXMAS()
+    protected function run9Part2()
     {
-        $this->targetData = [];
-
-        foreach ($this->sourceData as $str) {
-            $this->targetData[] = intval($str);
-        }
+        $data = $this->fetchEncryptedNumberOfXMAS(15690279);
+        return $data; // 2174232
     }
 
-    protected function fetchFirstNumberAfterPreamble($index = 25)
+    protected function fetchFirstNumberAfterPreamble($index)
     {
         $total = count($this->targetData);
 
@@ -597,33 +671,53 @@ class Coder
         return false;
     }
 
-    public function getDay10()
+    protected function fetchEncryptedNumberOfXMAS($num)
     {
-        $this->initDataToaAdapters();
+        $len = array_search($num, $this->targetData);
+
+        $arr = array_slice($this->targetData, 0, $len);
+
+        for ($chunk = 2; $chunk <= $len; $chunk++) {
+            for ($i = 0; $i < $len - $chunk; $i++) {
+                $temp = array_slice($arr, $i, $chunk);
+                if (array_sum($temp) == $num) {
+                    $min = min($temp);
+                    $max = max($temp);
+                    $data = $min + $max;
+                    return $data;
+                }
+            }
+        }
+       return null;
+    }
+
+    protected function init10()
+    {
+        $this->initInteger();
+    }
+
+    protected function run10Part1()
+    {
         $data = $this->getJoltageData($this->targetData);
 
         $a = count($data[1] ?? []);
         $b = count($data[3] ?? []);
         $num = $a * $b;
-        return $num;
+        return $num; // 2100
     }
 
-    public function initDataToaAdapters()
+    protected function run10Part2()
     {
-        $this->targetData = [];
-
-        foreach ($this->sourceData as $str) {
-            $this->targetData[] = intval($str);
-        }
+        $data = $this->getTotalJoltageWays();
+        return $data; // null
     }
 
-    public function getJoltageData(array $data)
+    protected function getJoltageData(array $data)
     {
         $max = max($data);
 
         $arr = array_merge([0, $max + 3], $data);
         sort($arr);
-        // $arr = [0, 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, 22];
 
         $data = [];
         foreach ($arr as $i => $v) {
@@ -637,13 +731,10 @@ class Coder
                 $data[$diff] = [$v];
             }
         }
-
         return $data;
     }
 
-    // protected
-
-    public function getTotalJoltageWays()
+    protected function getTotalJoltageWays()
     {
         $arr = $this->targetData;
 
@@ -654,6 +745,7 @@ class Coder
         $arr = [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31, 32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 48, 49, 52];
         $arr = [0, 1, 2, 3, 4, 7];
         // dd($arr);
+        return $max;
 
         // $this->joltage = 0;
         // $this->rollFetchJoltage($arr);
@@ -707,10 +799,15 @@ class Coder
         dd($data);
 
         dd($exp);
-        
+
         return pow(2, $exp);
     }
 
+    /**
+     * Day10 temp data
+     *
+     * @var integer
+     */
     protected $joltage = 0;
 
     protected function rollFetchJoltage(array $arr, array $data = [])
@@ -718,7 +815,6 @@ class Coder
         $data = empty($data) ? [min($arr)] : $data;
         $num = max($data);
         // dump($num . '--' . json_encode($data));
-
 
         if ($num == max($arr)) {
             $this->joltage += 1;
@@ -752,9 +848,27 @@ class Coder
         + ($next3 && $num-$next3 >= 1? $this->jump($next3) : 0);
     }
 
-    public function getDay11($part = 2)
+    protected function init11()
     {
-        $this->initDataToSeats();
+        foreach ($this->sourceData as $str) {
+            $this->targetData[] = str_split($str);
+        }
+    }
+
+    protected function run11Part1()
+    {
+        $total = $this->getTotalSeats(1);
+        return $total; // 2321
+    }
+
+    protected function run11Part2()
+    {
+        $total = $this->getTotalSeats(2);
+        return $total; // 2102
+    }
+
+    protected function getTotalSeats($part)
+    {
         $data = $this->refreshSeats($this->targetData, $part);
         $total = 0;
         foreach ($data as $row) {
@@ -762,15 +876,6 @@ class Coder
             $total += $temp['#'] ?? 0;
         }
         return $total;
-    }
-
-    protected function initDataToSeats()
-    {
-        $this->targetData = [];
-
-        foreach ($this->sourceData as $str) {
-            $this->targetData[] = str_split($str);
-        }
     }
 
     protected function refreshSeats(array $arr, $part = 2)
