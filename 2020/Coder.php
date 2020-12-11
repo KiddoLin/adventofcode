@@ -751,4 +751,115 @@ class Coder
         + ($next2 && $num-$next2 >= 2 ? $this->jump($next2) : 0) 
         + ($next3 && $num-$next3 >= 1? $this->jump($next3) : 0);
     }
+
+    public function getDay11($part = 2)
+    {
+        $this->initDataToSeats();
+        $data = $this->refreshSeats($this->targetData, $part);
+        $total = 0;
+        foreach ($data as $row) {
+            $temp = array_count_values($row);
+            $total += $temp['#'] ?? 0;
+        }
+        return $total;
+    }
+
+    protected function initDataToSeats()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            $this->targetData[] = str_split($str);
+        }
+    }
+
+    protected function refreshSeats(array $arr, $part = 2)
+    {
+        $data = [];
+
+        $limit = $part == 2 ? 5 : 4;
+
+        $hasChange = false;
+
+        $total = count($arr);
+        for ($i = 0; $i < $total; $i++) {
+            $len = count($arr[$i]);
+            for ($j = 0; $j < $len; $j++) {
+                $around = [
+                    $xl = $this->getNextSeatOf($arr, $i, $j, 'xl', $part),
+                    $xr = $this->getNextSeatOf($arr, $i, $j, 'xr', $part),
+
+                    $fl = $this->getNextSeatOf($arr, $i, $j, 'fl', $part),
+                    $fx = $this->getNextSeatOf($arr, $i, $j, 'fx', $part),
+                    $fr = $this->getNextSeatOf($arr, $i, $j, 'fr', $part),
+
+                    $bl = $this->getNextSeatOf($arr, $i, $j, 'bl', $part),
+                    $bx = $this->getNextSeatOf($arr, $i, $j, 'bx', $part),
+                    $br = $this->getNextSeatOf($arr, $i, $j, 'br', $part),
+                ];
+
+                $xx = $arr[$i][$j];
+
+                $valAround = array_count_values($around);
+                $totalOccupied = $valAround['#'] ?? 0;
+
+                if ($xx == 'L') {
+                    if ($totalOccupied > 0) {
+                        $data[$i][$j] = 'L';
+                    } else {
+                        $data[$i][$j] = '#';
+                        $hasChange = true;
+                    }
+                } elseif ($xx == '#') {
+                    if ($totalOccupied < $limit) {
+                        $data[$i][$j] = '#';
+                    } else {
+                        $data[$i][$j] = 'L';
+                        $hasChange = true;
+                    }
+                } else {
+                    $data[$i][$j] = $xx;
+                }
+            }
+        }
+
+        if ($hasChange) {
+            $data = $this->refreshSeats($data, $part);
+        }
+
+        return $data;
+    }
+
+    protected function getNextSeatOf(array $data, $i, $j, $direction, $part = 2)
+    {
+        if ($direction == 'fl') {
+            $i = $i - 1;
+            $j = $j - 1;
+        } elseif ($direction == 'fx') {
+            $i = $i - 1;
+        } elseif ($direction == 'fr') {
+            $i = $i - 1;
+            $j = $j + 1;
+        } elseif ($direction == 'xl') {
+            $j = $j - 1;
+        } elseif ($direction == 'xr') {
+            $j = $j + 1;
+        } elseif ($direction == 'bl') {
+            $i = $i + 1;
+            $j = $j - 1;
+        } elseif ($direction == 'bx') {
+            $i = $i + 1;
+        } elseif ($direction == 'br') {
+            $i = $i + 1;
+            $j = $j + 1;
+        } else {
+            return $data[$i][$j] ?? 'null';
+        }
+
+        $seat = $data[$i][$j] ?? 'null';
+        if ($part == 2 && $seat == '.') {
+            $seat = $this->getNextSeatOf($data, $i, $j, $direction);
+        }
+        return $seat;
+    }
 }
