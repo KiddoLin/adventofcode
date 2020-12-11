@@ -596,4 +596,159 @@ class Coder
         }
         return false;
     }
+
+    public function getDay10()
+    {
+        $this->initDataToaAdapters();
+        $data = $this->getJoltageData($this->targetData);
+
+        $a = count($data[1] ?? []);
+        $b = count($data[3] ?? []);
+        $num = $a * $b;
+        return $num;
+    }
+
+    public function initDataToaAdapters()
+    {
+        $this->targetData = [];
+
+        foreach ($this->sourceData as $str) {
+            $this->targetData[] = intval($str);
+        }
+    }
+
+    public function getJoltageData(array $data)
+    {
+        $max = max($data);
+
+        $arr = array_merge([0, $max + 3], $data);
+        sort($arr);
+        // $arr = [0, 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, 22];
+
+        $data = [];
+        foreach ($arr as $i => $v) {
+            if ($i == 0) {
+                continue;
+            }
+            $diff = $v - $arr[$i-1];
+            if (isset($data[$diff])) {
+                $data[$diff][] = $v;
+            } else {
+                $data[$diff] = [$v];
+            }
+        }
+
+        return $data;
+    }
+
+    // protected
+
+    public function getTotalJoltageWays()
+    {
+        $arr = $this->targetData;
+
+        $max = max($this->targetData);
+        $arr = array_merge([0], $this->targetData);
+        sort($arr);
+
+        $arr = [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31, 32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 48, 49, 52];
+        $arr = [0, 1, 2, 3, 4, 7];
+        // dd($arr);
+
+        // $this->joltage = 0;
+        // $this->rollFetchJoltage($arr);
+        // dd($this->joltage);
+
+        rsort($arr);
+
+        $total = $this->jump(count($arr)-1, $arr);
+        dd($total);
+
+        $total = 1;
+        foreach ($arr as $i => $v) {
+            for ($j = 3; $j > 2; $j--) {
+                $ni = $i + $j;
+                $next = $arr[$ni] ?? null;
+                if ($next) {
+                    $diff = $next - $v;
+                    if ($diff <= $i) {
+                        $temp = [
+                            3 => 4,
+                            2 => 2,
+                            1 => 1,
+                        ];
+                        $total *= $temp[$j];
+                        break;
+                    }
+                }
+            }
+        }
+        dd($total + 1);
+
+        $exp = 1;
+
+        $total = count($arr);
+
+        $data = [];
+        foreach ($arr as $v) {
+            for ($i = 1; $i <= 3; $i++) {
+                $num = $v + $i;
+                if (in_array($num, $arr)) {
+                    $data[$i][] = $i;
+                    // if (isset($data[$i])) {
+                    //     $data[$i][] = $i;
+                    // } else {
+                    //     $data[$i][] = $i;
+                    // }
+                }
+            }
+        }
+
+        dd($data);
+
+        dd($exp);
+        
+        return pow(2, $exp);
+    }
+
+    protected $joltage = 0;
+
+    protected function rollFetchJoltage(array $arr, array $data = [])
+    {
+        $data = empty($data) ? [min($arr)] : $data;
+        $num = max($data);
+        // dump($num . '--' . json_encode($data));
+
+
+        if ($num == max($arr)) {
+            $this->joltage += 1;
+            // dump(json_encode($data));
+            return $this->joltage;
+        }
+
+        foreach ($arr as $v) {
+            if (($v > $num) && (($v - $num) <= 3)) {
+                $temp = array_merge($data, [$v]);
+                $this->rollFetchJoltage($arr, $temp);
+            }
+        }
+    }
+
+    protected function jump($i, array $arr) 
+    {
+        if ($i == 0) return 0;
+        if ($i == 1) return 1;
+        if ($i == 2) return 2;
+        if ($i == 3) return 3;
+
+        $num = $arr[$i];
+
+        $next1 = $arr[$i - 1] ?? null;
+        $next2 = $arr[$i - 2] ?? null;
+        $next3 = $arr[$i - 3] ?? null;
+
+        return ($next1 && $num-$next1 >= 3 ? $this->jump($next1) : 0) 
+        + ($next2 && $num-$next2 >= 2 ? $this->jump($next2) : 0) 
+        + ($next3 && $num-$next3 >= 1? $this->jump($next3) : 0);
+    }
 }

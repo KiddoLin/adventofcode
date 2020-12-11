@@ -1,8 +1,8 @@
 <?php
-ini_set('memory_limit', '800M');
+ini_set('memory_limit', '2048M');
 require_once('./helper.php');
 
-$data = loadData(9);
+$data = loadData(10);
 
 $coder = new Coder($data);
 
@@ -27,7 +27,10 @@ $coder = new Coder($data);
 // $part1 = $coder->getDay8(1); // 1675
 // $part2 = $coder->getDay8(2); // 1532
 
-$part1 = $coder->getDay9(); // 15690279
-$part2 = $coder->fetchEncryptedNumberOfXMAS(); // 2174232
+// $part1 = $coder->getDay9(); // 15690279
+// $part2 = $coder->fetchEncryptedNumberOfXMAS(); // 2174232
+
+$part1 = $coder->getDay10(); // 2100
+$part2 = $coder->getTotalJoltageWays(); // 2100
 
 dd($part1, $part2);
