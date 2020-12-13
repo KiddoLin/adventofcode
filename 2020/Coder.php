@@ -1089,4 +1089,116 @@ class Coder
         return [$myx, $myy, $direction];
     }
 
+    protected $statTime;
+
+    protected function init13()
+    {
+        $this->statTime = intval($this->sourceData[0]);
+
+        foreach ($this->sourceData as $i => $str) {
+            if ($i > 0) {
+                $this->targetData = explode(',', $str);
+            }
+        }
+    }
+
+    protected function run13Part1()
+    {
+        $arr = $this->getCarMinTimeAfter($this->statTime);
+        $first = array_shift($arr);
+        $data = $first['car'] * $first['diff'];
+        return $data;
+    }
+
+    protected function run13Part2()
+    {
+        $data = $this->getCarTimestamp();
+        return $data;
+    }
+
+    public function getCarMinTimeAfter(int $startTime)
+    {
+        $data = [];
+        foreach ($this->targetData as $car) {
+            if ($car != 'x') {
+                $time = $this->getFirstMultipleNum($startTime, $car);
+                $data[$time] = [
+                    'car' => $car,
+                    'time' => $time,
+                    'diff' => $time - $startTime,
+                ];
+            }
+        }
+        ksort($data);
+        return $data;
+    }
+
+    protected function getFirstMultipleNum($num, $base, $isCeil = true)
+    {
+        $remainder = $num % $base;
+        if (!$remainder) {
+            return $remainder;
+        }
+        return $isCeil ? $num + ($base - $remainder) : $num- $remainder;
+    }
+
+    protected function getCarTimeMaps()
+    {
+        $maps = [];
+        foreach ($this->targetData as $i => $car) {
+            if ($car != 'x') {
+                $maps[$car] = intval($i);
+            }
+        }
+        return $maps;
+    }
+
+    protected function getCarTimestamp()
+    {
+//        $this->targetData = [
+//            67,'x',7,59,61
+//        ];
+
+        $maps = $this->getCarTimeMaps();
+
+        $baseCar = 0;
+        $baseIndex = 0;
+        foreach ($this->targetData as $i => $car) {
+            if ($car != 'x') {
+                if (intval($car) > $baseCar) {
+                    $baseCar = $car;
+                    $baseIndex = $i;
+                }
+            }
+        }
+
+        $t = $this->getFirstMultipleNum(100000000000000, 41, false);
+//        $t = 0;
+
+        $timestamp = null;
+
+        while (is_null($timestamp)) {
+            $isTime = true;
+            foreach ($maps as $car => $v) {
+                if ($t < $baseIndex) {
+                    $isTime = false;
+                    break;
+                }
+                $temp = $t + ($v - $baseIndex);
+                $remainder = $temp % $car;
+                if ($remainder > 0) {
+                    $isTime = false;
+                    break;
+                }
+            }
+
+            if ($isTime) {
+                $timestamp = $t - $baseIndex;
+            }
+
+            $t += $baseCar;
+        }
+
+        return $timestamp;
+    }
 }
