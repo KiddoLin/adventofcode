@@ -39,8 +39,11 @@ class Coder
             $this->init($day);
         }
 
+        dump('-------------------- part 1 run --------------------');
         $part1 = $this->runPart1();
+        dump('-------------------- part 2 run --------------------');
         $part2 = $this->runPart2();
+        dump('==================== part 1 & 2 over ====================');
 
         return [$part1, $part2];
     }
@@ -967,4 +970,123 @@ class Coder
         }
         return $seat;
     }
+
+    protected function init12()
+    {
+        foreach ($this->sourceData as $str) {
+            $op = $str[0];
+            $map = [
+                'F' => 0,
+                'E' => 2,
+                'S' => 4,
+                'W' => 6,
+                'N' => 8,
+                'L' => -1,
+                'R' => 1,
+            ];
+            $val = substr($str, 1);
+            $this->targetData[] = [
+                'op' => $map[$op],
+                'val' => $val,
+            ];
+        }
+    }
+
+    protected function run12Part1()
+    {
+        [$x, $y, $direction] = $this->execNavigationInstructions(0 , 0, 2);
+        $data = abs($x) + abs($y);
+        return $data; // 2847
+    }
+
+    protected function run12Part2()
+    {
+        [$x, $y, $direction] = $this->moveNavigationInstruction(10, 1, 2);
+        $data = abs($x) + abs($y);
+        return $data; // 29839
+    }
+
+    protected function execNavigationInstructions(int $x, int $y, int $direction)
+    {
+        foreach ($this->targetData as $item) {
+            $op = $item['op'];
+            $val = $item['val'];
+
+            $move = $op != 0 ? $op : $direction;
+
+            if ($move == 2) {
+                $x += $val;
+            } elseif ($move == 4) {
+                $y -= $val;
+            } elseif ($move == 6) {
+                $x -= $val;
+            } else if ($move == 8) {
+                $y += $val;
+            } else {
+                // -1 or 1
+                [$direction] = $this->turnNavigationPoint($op, $val, $direction);
+            }
+        }
+        return [$x, $y, $direction];
+    }
+
+    protected function turnNavigationPoint(int $op, int $val, int $direction, int $x = 0, int $y = 0)
+    {
+        $times = $val / 90;
+        $turn = $op * $times;
+        $temp = (($turn * 2) + $direction) % 8;
+        $newDirection = $temp > 0 ? $temp : $temp + 8;
+
+        if (in_array($turn, [1, -3])) {
+            $newX = $y;
+            $newY = -$x;
+        } elseif (in_array($turn, [2, -2])) {
+            $newX = -$x;
+            $newY = -$y;
+        } elseif (in_array($turn, [3, -1])) {
+            $newX = -$y;
+            $newY = $x;
+        } else {
+            // 4, 0, -4
+            $newX = $x;
+            $newY = $y;
+
+        }
+//        dump("({$x},{$y}) turn ({$op},$val) to ({$newX},{$newY})");
+
+        return [$newDirection, $newX, $newY];
+    }
+
+    protected function moveNavigationInstruction(int $x, int $y, int $direction)
+    {
+        $myx = 0;
+        $myy = 0;
+
+        foreach ($this->targetData as $item) {
+            $op = $item['op'];
+            $val = $item['val'];
+            if (!$op) {
+                $myx += ($x * $val);
+                $myy += ($y * $val);
+//                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
+            } elseif ($op == 2) {
+                $x += $val;
+//                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
+            } elseif ($op == 4) {
+                $y -= $val;
+//                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
+            } elseif ($op == 6) {
+                $x -= $val;
+//                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
+            } else if ($op == 8) {
+                $y += $val;
+//                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
+            } else {
+                // -1 or 1
+                [$direction, $x, $y] = $this->turnNavigationPoint($op, $val, $direction, $x, $y);
+            }
+        }
+        return [$myx, $myy, $direction];
+    }
+
 }
