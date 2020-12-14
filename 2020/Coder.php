@@ -1159,6 +1159,7 @@ class Coder
 //            67,'x',7,59,61
 //        ];
 
+        dd($this->targetData);
         $maps = $this->getCarTimeMaps();
 
         $baseCar = 0;
@@ -1200,5 +1201,113 @@ class Coder
         }
 
         return $timestamp;
+    }
+
+    protected function init14()
+    {
+        $mask = '';
+        foreach ($this->sourceData as $str) {
+            if (strstr($str, 'mask') !== false) {
+                $mask = str_replace('mask = ', '', $str);
+            } else {
+                [$memKey, $val] = explode(' = ', $str);
+                $mem = substr($memKey, 4, -1);
+                $decimal = intval($val);
+                $bin = base_convert($decimal, 10, 2);
+                $binary = sprintf('%036s', $bin);
+                if (strlen($bin) > 36 || strlen($binary) > 36) {
+                    dd('over length limit');
+                }
+                $this->targetData[] = [
+                    'mask' => $mask,
+                    'mem' => $mem,
+                    'value_decimal' => $decimal,
+                    'value_binary' => $binary,
+                ];
+            }
+        }
+    }
+
+    protected function run14Part1()
+    {
+        $data = $this->callMaskInit(1);
+        $total = array_sum($data);
+        return $total;
+    }
+
+    protected function run14Part2()
+    {
+        $data = $this->callMaskInit(2);
+        $total = array_sum($data);
+        return $total;
+    }
+
+    protected function callMaskInit($version)
+    {
+        $data = [];
+        foreach ($this->targetData as $i => $item) {
+            $resultBin = $this->getResultFromMask($item['mask'], $item['value_binary']);
+            $resultDec = base_convert($resultBin, 2, 10);
+            $result = intval($resultDec);
+            $data[$item['mem']] = $result;
+            $this->targetData[$i]['result_decimal'] = $result;
+            $this->targetData[$i]['result_binary'] = $resultBin;
+        }
+        return $data;
+    }
+
+    protected function getResultFromMask(string $mask, string $bin = null): string
+    {
+        if (is_null($bin)) {
+            $bin = sprintf('%036s', '');
+        }
+
+        $data = [];
+        $len = strlen($mask);
+        for($i = 0; $i < $len; $i++) {
+            $data[] = $mask[$i] === 'X' ? $bin[$i] : $mask[$i];
+        }
+
+        return implode('', $data);
+    }
+
+    protected function getResultFromMask2(string $mask, string $bin = null)
+    {
+        if (is_null($bin)) {
+            $bin = sprintf('%036s', '');
+        }
+        $float = 0;
+        $data = [];
+        $len = strlen($mask);
+        for($i = 0; $i < $len; $i++) {
+            if ($mask[$i] === 'X') {
+                $data[] = 'X';
+                $float++;
+            } elseif ($mask[$i] === 1) {
+                $data[] = 1;
+            } else {
+                $data[] = $bin[$i];
+            }
+        }
+
+        if ($float > 0) {
+            for($i = 0; $i < pow(2, $float); $i++) {
+                $result[] = $data;
+            }
+        }
+
+        while ($float > 0) {
+            $i = array_search($data, 'X');
+
+            $temp0 = $data;
+            $temp0[$i] = 0;
+
+            $temp1 = $data;
+            $temp1[$i] = 1;
+
+            $float--;
+        }
+
+        return implode('', $data);
     }
 }
