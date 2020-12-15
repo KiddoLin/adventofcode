@@ -2,7 +2,7 @@
 ini_set('memory_limit', '3072M');
 require_once('./helper.php');
 
-$day = 10;
+$day = 13;
 $coder = new Coder($day);
 [$part1, $part2] = $coder->run();
 

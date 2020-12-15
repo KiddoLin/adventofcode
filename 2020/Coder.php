@@ -1041,13 +1041,13 @@ class Coder
         $arr = $this->getCarMinTimeAfter($this->statTime);
         $first = array_shift($arr);
         $data = $first['car'] * $first['diff'];
-        return $data;
+        return $data; // 3246
     }
 
     protected function run13Part2()
     {
-        $data = $this->getCarTimestamp();
-        return $data;
+        $data = $this->getCarTimestamp($this->targetData);
+        return $data; // null
     }
 
     public function getCarMinTimeAfter(int $startTime)
@@ -1073,13 +1073,13 @@ class Coder
         if (!$remainder) {
             return $remainder;
         }
-        return $isCeil ? $num + ($base - $remainder) : $num- $remainder;
+        return $isCeil ? $num + ($base - $remainder) : $num - $remainder;
     }
 
-    protected function getCarTimeMaps()
+    protected function getCarTimeMaps(array $arr)
     {
         $maps = [];
-        foreach ($this->targetData as $i => $car) {
+        foreach ($arr as $i => $car) {
             if ($car != 'x') {
                 $maps[$car] = intval($i);
             }
@@ -1087,18 +1087,19 @@ class Coder
         return $maps;
     }
 
-    protected function getCarTimestamp()
+    protected function getCarTimestamp(array $arr)
     {
-//        $this->targetData = [
-//            67,'x',7,59,61
-//        ];
+//        $arr = [17,'x',13,19]; // 3417
+//        $arr = [67,7,59,61]; // 754018
+//        $arr = [67,'x',7,59,61]; // 779210
+//        $arr = [67,7,'x',59,61]; // 1261476
+//        $arr = [1789,37,47,1889]; // 1202161486
 
-        dd($this->targetData);
-        $maps = $this->getCarTimeMaps();
+        $maps = $this->getCarTimeMaps($arr);
 
         $baseCar = 0;
         $baseIndex = 0;
-        foreach ($this->targetData as $i => $car) {
+        foreach ($arr as $i => $car) {
             if ($car != 'x') {
                 if (intval($car) > $baseCar) {
                     $baseCar = $car;
@@ -1107,12 +1108,15 @@ class Coder
             }
         }
 
-        $t = $this->getFirstMultipleNum(100000000000000, 41, false);
+        // 99999999999468
+        $t = $this->getFirstMultipleNum(100000000000000, $baseCar, false);
+//        dump("$baseCar -- $baseIndex -- $t");
 //        $t = 0;
 
         $timestamp = null;
 
         while (is_null($timestamp)) {
+            dump($t);
             $isTime = true;
             foreach ($maps as $car => $v) {
                 if ($t < $baseIndex) {
@@ -1166,14 +1170,14 @@ class Coder
     {
         $data = $this->callMaskInit(1);
         $total = array_sum($data);
-        return $total;
+        return $total; // 11612740949946
     }
 
     protected function run14Part2()
     {
         $data = $this->callMaskInit(2);
         $total = array_sum($data);
-        return $total;
+        return $total; // null
     }
 
     protected function callMaskInit($version)
