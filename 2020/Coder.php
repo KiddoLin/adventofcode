@@ -697,6 +697,12 @@ class Coder
     protected function init10()
     {
         $this->initInteger();
+
+        $max = max($this->targetData);
+        $arr = array_merge([0, $max + 3], $this->targetData);
+        sort($arr);
+
+        $this->targetData = $arr;
     }
 
     protected function run10Part1()
@@ -711,17 +717,34 @@ class Coder
 
     protected function run10Part2()
     {
-        $data = $this->getTotalJoltageWays();
+        $arr = $this->targetData;
+
+        $arr = [0, 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, 22];
+        $this->joltage = 0;
+        $this->rollFetchJoltage($arr);
+        dd($this->joltage);
+
+
+        $max = max($this->targetData);
+//        $arr = array_merge([0, $max+3],);
+
+        $all = [];
+
+        $index = 0;
+
+        $len = count($this->targetData);
+        for ($i = 1; $i < $len; $i++) {
+            $diff = $this->targetData[$i] - $this->targetData[$i-1];
+            if ($diff < 3) {
+//                $arr[$index][] =
+            }
+        }
+        $data = $this->getTotalJoltageWays([]);
         return $data; // null
     }
 
-    protected function getJoltageData(array $data)
+    protected function getJoltageData(array $arr)
     {
-        $max = max($data);
-
-        $arr = array_merge([0, $max + 3], $data);
-        sort($arr);
-
         $data = [];
         foreach ($arr as $i => $v) {
             if ($i == 0) {
@@ -737,19 +760,8 @@ class Coder
         return $data;
     }
 
-    protected function getTotalJoltageWays()
+    protected function getTotalJoltageWays(array $arr)
     {
-        $arr = $this->targetData;
-
-        $max = max($this->targetData);
-        $arr = array_merge([0], $this->targetData);
-        sort($arr);
-
-        $arr = [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31, 32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 48, 49, 52];
-        $arr = [0, 1, 2, 3, 4, 7];
-        // dd($arr);
-        return $max;
-
         // $this->joltage = 0;
         // $this->rollFetchJoltage($arr);
         // dd($this->joltage);
@@ -799,9 +811,7 @@ class Coder
             }
         }
 
-        dd($data);
 
-        dd($exp);
 
         return pow(2, $exp);
     }
@@ -815,20 +825,22 @@ class Coder
 
     protected function rollFetchJoltage(array $arr, array $data = [])
     {
-        $data = empty($data) ? [min($arr)] : $data;
+        $data = empty($data) ? [array_shift($arr)] : $data;
+
         $num = max($data);
-        // dump($num . '--' . json_encode($data));
+        dump($num . '--' . json_encode($data));
 
         if ($num == max($arr)) {
             $this->joltage += 1;
-            // dump(json_encode($data));
+            dump(json_encode($data));
             return $this->joltage;
         }
 
-        foreach ($arr as $v) {
+        foreach ($arr as $k => $v) {
             if (($v > $num) && (($v - $num) <= 3)) {
-                $temp = array_merge($data, [$v]);
-                $this->rollFetchJoltage($arr, $temp);
+                $tempData = array_merge($data, [$v]);
+                $tempArr = array_slice($arr, $k);
+                $this->rollFetchJoltage($tempArr, $tempData);
             }
         }
     }
@@ -1246,7 +1258,9 @@ class Coder
     {
         $data = [];
         foreach ($this->targetData as $i => $item) {
-            $resultBin = $this->getResultFromMask($item['mask'], $item['value_binary']);
+            $resultBin = $version == 1
+                ? $this->getResultFromMask($item['mask'], $item['value_binary'])
+                : $this->getResultFromMask2($item['mask'], $item['value_binary']);
             $resultDec = base_convert($resultBin, 2, 10);
             $result = intval($resultDec);
             $data[$item['mem']] = $result;
