@@ -718,29 +718,8 @@ class Coder
     protected function run10Part2()
     {
         $arr = $this->targetData;
-
-        $arr = [0, 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, 22];
-        $this->joltage = 0;
-        $this->rollFetchJoltage($arr);
-        dd($this->joltage);
-
-
-        $max = max($this->targetData);
-//        $arr = array_merge([0, $max+3],);
-
-        $all = [];
-
-        $index = 0;
-
-        $len = count($this->targetData);
-        for ($i = 1; $i < $len; $i++) {
-            $diff = $this->targetData[$i] - $this->targetData[$i-1];
-            if ($diff < 3) {
-//                $arr[$index][] =
-            }
-        }
-        $data = $this->getTotalJoltageWays([]);
-        return $data; // null
+        $data = $this->getTotalJoltageWays($arr);
+        return $data; // 16198260678656
     }
 
     protected function getJoltageData(array $arr)
@@ -762,58 +741,22 @@ class Coder
 
     protected function getTotalJoltageWays(array $arr)
     {
-        // $this->joltage = 0;
-        // $this->rollFetchJoltage($arr);
-        // dd($this->joltage);
-
-        rsort($arr);
-
-        $total = $this->jump(count($arr)-1, $arr);
-        dd($total);
-
-        $total = 1;
-        foreach ($arr as $i => $v) {
-            for ($j = 3; $j > 2; $j--) {
-                $ni = $i + $j;
-                $next = $arr[$ni] ?? null;
-                if ($next) {
-                    $diff = $next - $v;
-                    if ($diff <= $i) {
-                        $temp = [
-                            3 => 4,
-                            2 => 2,
-                            1 => 1,
-                        ];
-                        $total *= $temp[$j];
-                        break;
-                    }
-                }
-            }
-        }
-        dd($total + 1);
-
-        $exp = 1;
-
-        $total = count($arr);
-
         $data = [];
-        foreach ($arr as $v) {
-            for ($i = 1; $i <= 3; $i++) {
-                $num = $v + $i;
-                if (in_array($num, $arr)) {
-                    $data[$i][] = $i;
-                    // if (isset($data[$i])) {
-                    //     $data[$i][] = $i;
-                    // } else {
-                    //     $data[$i][] = $i;
-                    // }
-                }
+
+        $len = count($arr);
+        $start = 0;
+        for ($i = 1; $i < $len; $i++) {
+            $diff = $arr[$i] - $arr[$i-1];
+            if ($diff >= 3) {
+                $temp = array_slice($arr, $start, $i - $start + 1);
+                $this->joltage = 0;
+                $this->rollFetchJoltage($temp);
+                $data[] = $this->joltage;
+                $start = $i;
             }
         }
 
-
-
-        return pow(2, $exp);
+        return array_product($data);
     }
 
     /**
@@ -825,15 +768,12 @@ class Coder
 
     protected function rollFetchJoltage(array $arr, array $data = [])
     {
-        $data = empty($data) ? [array_shift($arr)] : $data;
+        $data = empty($data) ? [min($arr)] : $data;
 
         $num = max($data);
-        dump($num . '--' . json_encode($data));
-
-        if ($num == max($arr)) {
+        if (empty($arr) || $num >= max($arr)) {
             $this->joltage += 1;
-            dump(json_encode($data));
-            return $this->joltage;
+            return null;
         }
 
         foreach ($arr as $k => $v) {
@@ -843,24 +783,6 @@ class Coder
                 $this->rollFetchJoltage($tempArr, $tempData);
             }
         }
-    }
-
-    protected function jump($i, array $arr) 
-    {
-        if ($i == 0) return 0;
-        if ($i == 1) return 1;
-        if ($i == 2) return 2;
-        if ($i == 3) return 3;
-
-        $num = $arr[$i];
-
-        $next1 = $arr[$i - 1] ?? null;
-        $next2 = $arr[$i - 2] ?? null;
-        $next3 = $arr[$i - 3] ?? null;
-
-        return ($next1 && $num-$next1 >= 3 ? $this->jump($next1) : 0) 
-        + ($next2 && $num-$next2 >= 2 ? $this->jump($next2) : 0) 
-        + ($next3 && $num-$next3 >= 1? $this->jump($next3) : 0);
     }
 
     protected function init11()
