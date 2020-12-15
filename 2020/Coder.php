@@ -1310,4 +1310,52 @@ class Coder
 
         return implode('', $data);
     }
+
+    protected function init15()
+    {
+        $data = explode(',', $this->sourceData[0]);
+        foreach ($data as $v) {
+            $this->targetData[] = intval($v);
+        }
+    }
+
+    protected function run15Part1()
+    {
+        $data = $this->getLoopNumOf(2020);
+        return $data; // 1294
+    }
+
+    protected function run15Part2()
+    {
+        $data = $this->getLoopNumOf(30000000);
+        return $data; // 573522
+    }
+
+    protected function getLoopNumOf(int $index)
+    {
+        $data = $this->targetData;
+
+        foreach ($data as $k => $v) {
+            $spoken[$v][] = $k;
+        }
+
+        $temp = 'null';
+
+        $i = count($data);
+        while ($i < $index) {
+            if (!isset($spoken[$temp]) || count($spoken[$temp]) <= 1) {
+                $temp = 0;
+            } else {
+                $last = end($spoken[$temp]);
+                $lastTwo = prev($spoken[$temp]);
+                $temp = $last - $lastTwo;
+            }
+
+            $spoken[$temp][] = $i;
+
+            $i++;
+        }
+
+        return $temp;
+    }
 }
