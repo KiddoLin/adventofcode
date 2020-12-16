@@ -1056,10 +1056,8 @@ class Coder
 
     protected function run13Part2()
     {
-//        $data = $this->getCar($this->targetData);
-//        dd($data);
         $data = $this->getCarTimestamp($this->targetData);
-        return $data; // null
+        return $data; // 1010182346291467
     }
 
     public function getCarMinTimeAfter(int $startTime)
@@ -1079,7 +1077,7 @@ class Coder
         return $data;
     }
 
-    protected function getFirstMultipleNum($num, $base, $isCeil = true)
+    protected function getFirstMultipleNum(int $num, int $base, $isCeil = true)
     {
         $remainder = $num % $base;
         if (!$remainder) {
@@ -1088,122 +1086,35 @@ class Coder
         return $isCeil ? $num + ($base - $remainder) : $num - $remainder;
     }
 
-    protected function getCarTimeMaps(array $arr)
+    protected function getCarTimestamp(array $arr)
     {
-        $maps = [];
-        foreach ($arr as $i => $car) {
-            if ($car != 'x') {
-                $maps[$car] = intval($i);
-            }
-        }
-        return $maps;
-    }
-
-    protected function getCar($arr)
-    {
-        $arr = [17,'x',13,19]; // 3417
-//        $arr = [67,7,59,61]; // 754018
-//        $arr = [67,'x',7,59,61]; // 779210
-//        $arr = [67,7,'x',59,61]; // 1261476
-//        $arr = [1789,37,47,1889]; // 1202161486
-
-        $t = 0;
-        $baseCar = null;
-        $baseIndex = null;
-        foreach ($arr as $i => $car) {
-            if ($car != 'x') {
-                if (is_null($baseCar)) {
-                    $baseCar = $car;
-                    $baseIndex = $i;
+        $t = null;
+        $divisor = null;
+        foreach ($arr as $i => $v) {
+            if ($v != 'x') {
+                if (is_null($t)) {
+                    $t = $v;
+                    $divisor = $v;
                 } else {
-                    $diff = $i - $baseIndex;
-                    dump("{$t}--{$baseCar}~{$car}--{$diff}");
-                    $temp = [$baseCar];
-                    for ($i = 0;$i < $diff; $i++) {
-                        $temp[] = 'x';
-                    }
-                    $temp[] = $car;
-                    $t = $this->getCarTimestamp($temp, $t);
-//                    $t = $this->getCarTimestampBoth($baseCar, $car, $diff, $t);
-                    $baseCar = $t;
-                    $baseIndex = $i;
+                    $t = $this->getCarTimestampBoth($t, $divisor, $v, $i);
+                    $divisor *= $v;
                 }
             }
         }
         return $t;
     }
 
-    protected function getCarTimestamp(array $arr, int $t = 0)
-    {
-//        $arr = [17,'x',13,19]; // 3417
-          $arr = [67,7,59,61,79]; // 113845395   113,091,377
-//        $arr = [67,7,59,61]; // 754018
-//        $arr = [67,7,59];// 6901
-//        $arr = [67,7];// 335
-//        $arr = [67];// 0
-//        $arr = [67,'x',7,59,61]; // 779210
-//        $arr = [67,7,'x',59,61]; // 1261476
-//        $arr = [1789,37,47,1889]; // 1202161486
-//        $arr = [41,'x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',
-//            'x','x','x','x','x','x','x','x','x',37,'x','x','x','x','x',541,'x','x','x','x','x','x','x',23,'x','x','x',
-//            'x',13,'x','x','x',17,'x','x','x','x','x','x','x','x','x','x','x',29
-//        ];
-
-        $maps = $this->getCarTimeMaps($arr);
-
-        $baseCar = 0;
-        $baseIndex = 0;
-        foreach ($arr as $i => $car) {
-            if ($car != 'x') {
-                if (intval($car) > $baseCar) {
-                    $baseCar = $car;
-                    $baseIndex = $i;
-                }
-            }
-        }
-
-        // 99999999999468
-//        $t = $this->getFirstMultipleNum(100001178246032, $baseCar, false);
-//        dump("$baseCar -- $baseIndex -- $t");
-
-        $timestamp = null;
-
-        while (is_null($timestamp)) {
-            dump($t);
-            $isTime = true;
-            foreach ($maps as $car => $v) {
-                if ($t < $baseIndex) {
-                    $isTime = false;
-                    break;
-                }
-                $temp = $t + ($v - $baseIndex);
-                $remainder = $temp % $car;
-                if ($remainder > 0) {
-                    $isTime = false;
-                    break;
-                }
-            }
-
-            if ($isTime) {
-                $timestamp = $t - $baseIndex;
-            }
-
-            $t += $baseCar;
-        }
-
-        return $timestamp;
-    }
-
-    protected function getCarTimestampBoth($base, $more, $diff, $t)
+    protected function getCarTimestampBoth(int $base, int $divisor, int $num, int $diff)
     {
         $timestamp = null;
+        $i = 0;
         while (is_null($timestamp)) {
-            dump($t);
-            $remainder = ($t + $diff) % $more;
+            $t = $base + ($divisor * $i);
+            $remainder = ($t + $diff) % $num;
             if ($remainder == 0) {
                 $timestamp = $t;
             }
-            $t += $base;
+            $i++;
         }
         return $timestamp;
     }
