@@ -1056,6 +1056,8 @@ class Coder
 
     protected function run13Part2()
     {
+//        $data = $this->getCar($this->targetData);
+//        dd($data);
         $data = $this->getCarTimestamp($this->targetData);
         return $data; // null
     }
@@ -1097,13 +1099,55 @@ class Coder
         return $maps;
     }
 
-    protected function getCarTimestamp(array $arr)
+    protected function getCar($arr)
     {
-//        $arr = [17,'x',13,19]; // 3417
+        $arr = [17,'x',13,19]; // 3417
 //        $arr = [67,7,59,61]; // 754018
 //        $arr = [67,'x',7,59,61]; // 779210
 //        $arr = [67,7,'x',59,61]; // 1261476
 //        $arr = [1789,37,47,1889]; // 1202161486
+
+        $t = 0;
+        $baseCar = null;
+        $baseIndex = null;
+        foreach ($arr as $i => $car) {
+            if ($car != 'x') {
+                if (is_null($baseCar)) {
+                    $baseCar = $car;
+                    $baseIndex = $i;
+                } else {
+                    $diff = $i - $baseIndex;
+                    dump("{$t}--{$baseCar}~{$car}--{$diff}");
+                    $temp = [$baseCar];
+                    for ($i = 0;$i < $diff; $i++) {
+                        $temp[] = 'x';
+                    }
+                    $temp[] = $car;
+                    $t = $this->getCarTimestamp($temp, $t);
+//                    $t = $this->getCarTimestampBoth($baseCar, $car, $diff, $t);
+                    $baseCar = $t;
+                    $baseIndex = $i;
+                }
+            }
+        }
+        return $t;
+    }
+
+    protected function getCarTimestamp(array $arr, int $t = 0)
+    {
+//        $arr = [17,'x',13,19]; // 3417
+          $arr = [67,7,59,61,79]; // 113845395   113,091,377
+//        $arr = [67,7,59,61]; // 754018
+//        $arr = [67,7,59];// 6901
+//        $arr = [67,7];// 335
+//        $arr = [67];// 0
+//        $arr = [67,'x',7,59,61]; // 779210
+//        $arr = [67,7,'x',59,61]; // 1261476
+//        $arr = [1789,37,47,1889]; // 1202161486
+//        $arr = [41,'x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',
+//            'x','x','x','x','x','x','x','x','x',37,'x','x','x','x','x',541,'x','x','x','x','x','x','x',23,'x','x','x',
+//            'x',13,'x','x','x',17,'x','x','x','x','x','x','x','x','x','x','x',29
+//        ];
 
         $maps = $this->getCarTimeMaps($arr);
 
@@ -1119,9 +1163,8 @@ class Coder
         }
 
         // 99999999999468
-        $t = $this->getFirstMultipleNum(100000000000000, $baseCar, false);
+//        $t = $this->getFirstMultipleNum(100001178246032, $baseCar, false);
 //        dump("$baseCar -- $baseIndex -- $t");
-//        $t = 0;
 
         $timestamp = null;
 
@@ -1148,6 +1191,20 @@ class Coder
             $t += $baseCar;
         }
 
+        return $timestamp;
+    }
+
+    protected function getCarTimestampBoth($base, $more, $diff, $t)
+    {
+        $timestamp = null;
+        while (is_null($timestamp)) {
+            dump($t);
+            $remainder = ($t + $diff) % $more;
+            if ($remainder == 0) {
+                $timestamp = $t;
+            }
+            $t += $base;
+        }
         return $timestamp;
     }
 
