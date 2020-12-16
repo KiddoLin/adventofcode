@@ -315,14 +315,24 @@ class Coder
         $hcl = $passport['hcl'] ?? null;
         $ecl = $passport['ecl'] ?? null;
         $pid = $passport['pid'] ?? null;
-        if ($byr < 1920 || $byr > 2002) return false;
-        if ($iyr < 2010 || $iyr > 2020) return false;
-        if ($eyr < 2020 || $eyr > 2030) return false;
+        if ($byr < 1920 || $byr > 2002) {
+            return false;
+        }
+        if ($iyr < 2010 || $iyr > 2020) {
+            return false;
+        }
+        if ($eyr < 2020 || $eyr > 2030) {
+            return false;
+        }
         $intHgt = intval($hgt);
         if (strripos($hgt, 'cm') !== false) {
-            if ($intHgt < 150 || $intHgt > 193) return false;
+            if ($intHgt < 150 || $intHgt > 193) {
+                return false;
+            }
         } elseif (strripos($hgt, 'in') !== false) {
-            if ($intHgt < 59 || $intHgt > 76) return false;
+            if ($intHgt < 59 || $intHgt > 76) {
+                return false;
+            }
         } else {
             return false;
         }
@@ -495,7 +505,7 @@ class Coder
         }
     }
 
-    protected function initBagName(string $name) 
+    protected function initBagName(string $name)
     {
         $name = str_replace(' bags', '', $name);
         $name = str_replace(' bag', '', $name);
@@ -567,7 +577,7 @@ class Coder
     {
         try {
             $value = $this->runAccumulator($this->targetData);
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $value = $e->getCode();
         }
         return $value; // 1675
@@ -584,7 +594,7 @@ class Coder
                 try {
                     $value = $this->runAccumulator($data);
                     dump("Fix item {$i} " . json_encode($item));
-                } catch (\Exception $e) {
+                } catch ( \Exception $e ) {
                     //
                 }
             }
@@ -691,7 +701,7 @@ class Coder
                 }
             }
         }
-       return null;
+        return null;
     }
 
     protected function init10()
@@ -729,7 +739,7 @@ class Coder
             if ($i == 0) {
                 continue;
             }
-            $diff = $v - $arr[$i-1];
+            $diff = $v - $arr[$i - 1];
             if (isset($data[$diff])) {
                 $data[$diff][] = $v;
             } else {
@@ -746,7 +756,7 @@ class Coder
         $len = count($arr);
         $start = 0;
         for ($i = 1; $i < $len; $i++) {
-            $diff = $arr[$i] - $arr[$i-1];
+            $diff = $arr[$i] - $arr[$i - 1];
             if ($diff >= 3) {
                 $temp = array_slice($arr, $start, $i - $start + 1);
                 $this->joltage = 0;
@@ -928,7 +938,7 @@ class Coder
 
     protected function run12Part1()
     {
-        [$x, $y, $direction] = $this->execNavigationInstructions(0 , 0, 2);
+        [$x, $y, $direction] = $this->execNavigationInstructions(0, 0, 2);
         $data = abs($x) + abs($y);
         return $data; // 2847
     }
@@ -954,7 +964,7 @@ class Coder
                 $y -= $val;
             } elseif ($move == 6) {
                 $x -= $val;
-            } else if ($move == 8) {
+            } elseif ($move == 8) {
                 $y += $val;
             } else {
                 // -1 or 1
@@ -1012,7 +1022,7 @@ class Coder
             } elseif ($op == 6) {
                 $x -= $val;
 //                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
-            } else if ($op == 8) {
+            } elseif ($op == 8) {
                 $y += $val;
 //                dump("{$op}--{$val} waypoint({$x},{$y})--my({$myx},{$myy})");
             } else {
@@ -1204,7 +1214,7 @@ class Coder
 
         $data = [];
         $len = strlen($mask);
-        for($i = 0; $i < $len; $i++) {
+        for ($i = 0; $i < $len; $i++) {
             $data[] = $mask[$i] === 'X' ? $bin[$i] : $mask[$i];
         }
 
@@ -1219,7 +1229,7 @@ class Coder
         $float = 0;
         $data = [];
         $len = strlen($mask);
-        for($i = 0; $i < $len; $i++) {
+        for ($i = 0; $i < $len; $i++) {
             if ($mask[$i] === 'X') {
                 $data[] = 'X';
                 $float++;
@@ -1231,7 +1241,7 @@ class Coder
         }
 
         if ($float > 0) {
-            for($i = 0; $i < pow(2, $float); $i++) {
+            for ($i = 0; $i < pow(2, $float); $i++) {
                 $result[] = $data;
             }
         }
@@ -1297,5 +1307,146 @@ class Coder
         }
 
         return $temp;
+    }
+
+    protected $myTicket = [];
+    protected $ticketRules = [];
+
+    protected function init16()
+    {
+        $i = 0;
+        foreach ($this->sourceData as $str) {
+            if (empty($str)) {
+                $i++;
+            } else {
+                if ($i > 0) {
+                    if (strstr($str, ',') !== false) {
+                        $temp = explode(',', $str);
+                        if ($i == 1) {
+                            $this->myTicket = $temp;
+                        } else {
+                            $this->targetData[] = $temp;
+                        }
+                    }
+                } else {
+                    [$k, $nums] = explode(': ', $str);
+                    [$first, $second] = explode(' or ', $nums);
+                    $this->ticketRules[$k] = [
+                        explode('-', $first),
+                        explode('-', $second),
+                    ];
+                }
+            }
+        }
+    }
+
+    protected function run16Part1()
+    {
+        $data = $this->getInvalidTickets($this->targetData);
+        $rate = array_sum($data);
+        return $rate;
+    }
+
+    protected function run16Part2()
+    {
+        $realRules = $this->getRealTicketRules($this->remainingTickets);
+        $ticket = $this->fillTicketKey($realRules, $this->myTicket);
+
+        $total = 1;
+        foreach ($ticket as $k => $num) {
+            if (strstr($k, 'departure') !== false) {
+                $total *= $num;
+            }
+        }
+        return $total;
+    }
+
+    protected $remainingTickets = [];
+
+    protected function getInvalidTickets(array $arr)
+    {
+        $data = [];
+        foreach ($arr as $i => $item) {
+            $isValid = true;
+            foreach ($item as $num) {
+                if ($this->isValidTicketNum($num) == false) {
+                    $data[] = $num;
+                    $isValid = false;
+                }
+            }
+            if ($isValid) {
+                $this->remainingTickets[] = $item;
+            }
+        }
+        return $data;
+    }
+
+    protected function isValidTicketNum(int $num): bool
+    {
+        foreach ($this->ticketRules as $rules) {
+            if ($this->checkTicketNumWith($rules, $num)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function checkTicketNumWith(array $rule, $num)
+    {
+        foreach ($rule as $item) {
+            [$left, $right] = $item;
+            if ($num >= $left && $num <= $right) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function getRealTicketRules(array $arr)
+    {
+        $data = [];
+        $len = count($arr[0] ?? []);
+        for ($i = 0; $i < $len; $i++) {
+            $nums = array_column($arr, $i);
+            foreach ($this->ticketRules as $k => $rule) {
+                $isRule = true;
+                foreach ($nums as $num) {
+                    if ($this->checkTicketNumWith($rule, $num) == false) {
+                        $isRule = false;
+                        break;
+                    }
+                }
+                if ($isRule) {
+                    $data[$i][] = $k;
+                }
+            }
+        }
+
+        $temp = [];
+        foreach ($data as $i => $ks) {
+            $temp[$i] = count($ks);
+        }
+        asort($temp);
+
+        $real = [];
+        foreach ($temp as $i => $total) {
+            $keys = $data[$i];
+            do {
+                $one = array_pop($keys);
+            } while(in_array($one, $real));
+            $real[$i] = $one;
+        }
+        ksort($real);
+
+        return $real;
+    }
+
+    protected function fillTicketKey(array $realRules, array $ticket)
+    {
+        $data = [];
+        foreach ($realRules as $i => $key) {
+            $data[$key] = $ticket[$i];
+        }
+        return $data;
     }
 }
