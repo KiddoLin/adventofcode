@@ -1454,4 +1454,103 @@ class Coder
         }
         return $data;
     }
+
+    protected function init17()
+    {
+        $this->targetData = $this->sourceData;
+    }
+
+    protected function run17Part1()
+    {
+        $cubes = $this->fillSlice2Dto3D($this->targetData);
+        $data = $this->loopConwayCube($cubes, 6);
+        dd($data);
+    }
+
+    protected function run17Part2()
+    {
+
+    }
+
+    protected function fillSlice2Dto3D(array $arr)
+    {
+        $temp = [];
+        $row = count($arr);
+        for($i = 0; $i < $row; $i++) {
+            $temp[$i] = '';
+            $column = strlen($arr[$i]);
+            for ($j = 0; $j < $column; $j++) {
+                $temp[$i] .= $arr[$i][$j];//'.';//
+            }
+        }
+        $data[-1] = $temp;
+        $data[0] = $arr;
+        $data[1] = $temp;
+        return $data;
+    }
+
+    protected function loopConwayCube(array $cubes, int $cycle)
+    {
+        dump($cubes);
+        for ($i = 0; $i < $cycle; $i++) {
+            $newCubes = $this->boomConwayCube($cubes);
+            $cubes = $this->changeConwayCube($newCubes);
+            dd($cubes);
+        }
+        return $cubes;
+    }
+
+    protected function boomConwayCube(array $cube)
+    {
+        return $cube;
+    }
+
+    protected function changeConwayCube(array $arr)
+    {
+        $data = [];
+        foreach ($arr as $z => $square) {
+            $row = count($arr[$z]);
+            for ($x = 0; $x < $row; $x++) {
+                $data[$z][$x] = '';
+                $column = strlen($arr[$z][$x]);
+                for ($y = 0; $y < $column; $y++) {
+                    $near = $this->getAtomNear($arr, $z, $x, $y);
+                    $atom = $arr[$z][$x][$y];
+                    $newAtom = $this->changeConwayAtom($near, $atom);
+                    $data[$z][$x] .= $newAtom;
+                }
+            }
+        }
+        return $data;
+    }
+
+    protected function getAtomNear(array $arr, int $z, int $x, int $y)
+    {
+        $near = [];
+        for ($i = $z-1; $i <= $z+1; $i++) {
+            for ($j = $x-1; $j <= $x+1; $j++) {
+                for ($k = $y-1; $k <= $y+1; $k++) {
+                    if ($i == $z && $j == $x && $k == $y) {
+                        continue;
+                    } else {
+                        $near[] = $arr[$i][$j][$k] ?? '.';
+                    }
+                }
+            }
+        }
+        return $near;
+    }
+
+    protected function changeConwayAtom(array $near, string $atom)
+    {
+        $nearCount = array_count_values($near);
+        $inactive = $nearCount['#'] ?? 0;
+        if ($atom == '#') {
+            $newAtom = in_array($inactive, [2, 3]) ? '#' : '.';
+        } else {
+            $newAtom = $inactive == 3 ? '#' : '.';
+        }
+//        dump(json_encode($nearCount)."--$inactive--$atom => $newAtom");
+        return $newAtom;
+    }
 }
