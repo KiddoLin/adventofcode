@@ -1201,14 +1201,20 @@ class Coder
             $possibleValues = $this->getResultFromMask2($item['mask'], $item['mem_binary']);
             $realValue = 0;
             foreach ($possibleValues as $value) {
-                $tempRin = $this->getResultFromMask($item['mask'], $value);
-                $resultDec = base_convert($tempRin, 2, 10);
+                // value
+                $resultBin = $this->getResultFromMask($item['mask'], $item['value_binary']);
+                $resultBin = $item['value_binary'];
+                $resultDec = base_convert($resultBin, 2, 10);
                 $result = intval($resultDec);
-                $arr[$i]['float_binary'][] = $tempRin;
+                $arr[$i]['float_binary'][] = $resultBin;
                 $arr[$i]['float_decimal'][] = $result;
-                $realValue += $result;
+                // mem
+                $memDecimal = base_convert($value, 2, 10);
+                $mem = intval($memDecimal);
+                dump("$mem---$result");
+                // storage
+                $data[$mem] = $realValue;
             }
-            $data[$item['mem']] = $realValue;
         }
         return $data;
     }
