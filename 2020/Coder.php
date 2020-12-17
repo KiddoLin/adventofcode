@@ -1162,7 +1162,7 @@ class Coder
     {
         $data = $this->callMaskInit2($this->targetData);
         $total = array_sum($data);
-        return $total; // null
+        return $total; // 3394509207186
     }
 
     protected function callMaskInit(array &$arr)
@@ -1199,22 +1199,12 @@ class Coder
         $data = [];
         foreach ($arr as $i => $item) {
             $possibleValues = $this->getResultFromMask2($item['mask'], $item['mem_binary']);
-            $realValue = 0;
-            foreach ($possibleValues as $value) {
-                // value
-                $resultBin = $this->getResultFromMask($item['mask'], $item['value_binary']);
-                $resultBin = $item['value_binary'];
-                $resultDec = base_convert($resultBin, 2, 10);
-                $result = intval($resultDec);
-                $arr[$i]['float_binary'][] = $resultBin;
-                $arr[$i]['float_decimal'][] = $result;
-                // mem
-                $memDecimal = base_convert($value, 2, 10);
+            foreach ($possibleValues as $memBin) {
+                $memDecimal = base_convert($memBin, 2, 10);
                 $mem = intval($memDecimal);
-                dump("$mem---$result");
-                // storage
-                $data[$mem] = $realValue;
+                $data[$mem] = $item['value'];
             }
+            $arr[$i]['float_memes'] = $possibleValues;
         }
         return $data;
     }
