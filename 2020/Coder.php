@@ -1345,7 +1345,7 @@ class Coder
     {
         $data = $this->getInvalidTickets($this->targetData);
         $rate = array_sum($data);
-        return $rate;
+        return $rate; // 27850
     }
 
     protected function run16Part2()
@@ -1359,7 +1359,7 @@ class Coder
                 $total *= $num;
             }
         }
-        return $total;
+        return $total; // 491924517533
     }
 
     protected $remainingTickets = [];
@@ -1548,5 +1548,150 @@ class Coder
         }
 //        dump(json_encode($nearCount)."--$inactive--$atom => $newAtom");
         return $newAtom;
+    }
+
+    protected function init18()
+    {
+        $this->targetData = str_replace(' ', '', $this->sourceData);
+    }
+
+    protected function run18Part1()
+    {
+        $data = 0;
+        foreach ($this->targetData as $str) {
+            $data += $this->calculateHouseWork($str);
+        }
+        return $data; // 1890866893020
+    }
+
+    protected function run18Part2()
+    {
+        $data = 0;
+        foreach ($this->targetData as $str) {
+            $num = $this->calculateHouseWork2($str);
+            $data += intval($num);
+        }
+        return $data; // 34646237037193
+    }
+
+    protected function calculateHouseWork($str)
+    {
+        $sum = null;
+        $op = null;
+        $len = strlen($str);
+        for ($i = 0; $i < $len; $i++) {
+            if (empty($str[$i]) || $str[$i] == ' ') {
+                continue;
+            }
+            if (is_numeric($str[$i])) {
+                $sum = $this->calculateHouseWorkOp($sum, $op, $str[$i]);
+            } elseif (in_array($str[$i], ['+', '*'])) {
+                $op = $str[$i];
+            } elseif($str[$i] == '(') {
+                $rightLen = $this->fetchRightParentheses($i, $str);
+                $tempStr = substr($str, $i + 1, $rightLen - 1);
+                $num = $this->calculateHouseWork($tempStr);
+                $sum = $this->calculateHouseWorkOp($sum, $op, $num);
+                $i += $rightLen;
+            }
+        }
+        return $sum;
+    }
+
+    protected function calculateHouseWorkOp($sum, $op, $num)
+    {
+        if (is_null($sum)) {
+            return $num;
+        }
+        if ($op == '+') {
+            $sum += $num;
+        } elseif ($op == '*') {
+            $sum *= $num;
+        } else {
+            dd('Unknown op');
+        }
+        return $sum;
+    }
+
+    protected function fetchRightParentheses(int $leftIndex, string $str)
+    {
+        $right = $leftIndex;
+        $num = 0;
+        for ($i = $right; $i < strlen($str); $i++) {
+            if ($str[$i] == '(') {
+                $num++;
+            } elseif ($str[$i] == ')') {
+                $num--;
+            }
+            if (!$num) {
+                $right = $i;
+                break;
+            }
+        }
+        return $right - $leftIndex;
+    }
+
+    protected function calculateHouseWorkItem(string $str, string $op)
+    {
+        $i = strpos($str, $op);
+        while ($i !== false) {
+            [$key1, $num1] = $this->fetchHouseWorkItemNum($str, $i);
+            [$key2, $num2] = $this->fetchHouseWorkItemNum($str, $i, false);
+            $num = $this->calculateHouseWorkOp($num1, $op, $num2);
+
+            $l = !$key1 ? '' : substr($str, 0, $key1);
+            $r = $key2 >= strlen($str) ? '' : substr($str, $key2 + 1);
+            $str = $l.$num.$r;
+
+            $i = strpos($str, $op);
+        }
+        return $str;
+    }
+
+    public function calculateHouseWork2(string $str)
+    {
+        $start = 0;
+        $i = strpos($str, '(');
+        while ($i !== false) {
+            $rightLen = $this->fetchRightParentheses($i, $str);
+            $tempStr = substr($str, $i + 1, $rightLen - 1);
+            $num = $this->calculateHouseWork2($tempStr);
+
+            $l = substr($str, $start, $i);
+            $r = substr($str, $i + $rightLen + 1);
+            $str = $l.$num.$r;
+
+            $i = strpos($str, '(');
+        }
+
+        $str = $this->calculateHouseWorkItem($str, '+');
+        $str = $this->calculateHouseWorkItem($str, '*');
+
+        return $str;
+    }
+
+    protected function fetchHouseWorkItemNum(string $str, int $index, $isLeft = true)
+    {
+        $key = null;
+        $temp = '';
+        if ($isLeft) {
+            for ($i = $index - 1; $i >= 0; $i--) {
+                if (in_array($str[$i], ['*', '+'])) {
+                    break;
+                }
+                $temp = $str[$i] . $temp;
+                $key = $i;
+            }
+        } else {
+            $len = strlen($str);
+            for ($i = $index + 1; $i < $len; $i++) {
+                if (in_array($str[$i], ['*', '+'])) {
+                    break;
+                }
+                $temp = $temp . $str[$i];
+                $key = $i;
+            }
+        }
+        return [$key, intval($temp)];
     }
 }
