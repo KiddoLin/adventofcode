@@ -1719,9 +1719,6 @@ class Coder
     protected function run19Part1()
     {
 //        dd($this->messageRules);
-        $data = $this->checkMessageRules(['4 1 5']);
-        dd($data);
-
         $this->fetchMessagesRules($this->messageRules[0]);
     }
 
@@ -1741,28 +1738,51 @@ class Coder
     protected function checkMessageRules(array $arr)
     {
         foreach ($arr as $v) {
-            if (preg_match('/(![a|b| ]).*/', $v)) {
-                return 0;
+            if (!in_array($v, ['a', 'b'])) {
+                return false;
             }
+//            $temp = explode(' ', $v);
+//            $count = array_keys(array_count_values($temp));
+//            $diff = array_diff($count, ['a', 'b']);
+//            if (count($diff)) {
+//                return false;
+//            }
         }
-        return 1;
+        return true;
     }
 
     protected function loopMessagesRules(string $ruleStr, $index = 0, string $args = '')
     {
-//        $arr = explode(' ', $ruleStr);
+        dump('str = ' . $ruleStr);
+        $arr = explode(' ', $ruleStr);
+
+        foreach ($arr as $key => $item) {
+            if (!in_array($item, ['a', 'b', ' '])) {
+                $replace = $this->messageRules[$item];
+                if (strstr($replace, '|') === false) {
+                    $arr[$key] = $replace;
+                } else {
+                    $temp = explode(' | ', $replace);
+                    foreach ($temp as $s) {
+                        $arr[$key] = $s;
+                        $n = implode(' ', $arr);
+                        dump('or == '.$n);
+                        $this->loopMessagesRules($n);
+                    }
+                }
+            }
+        }
+
+
 //        do {
-//            foreach ($arr as $item) {
-//                if (!in_array($item, ['a', 'b', ' '])) {
-//                    $replace = $this->messageRules[$item];
-//                    if (strstr($replace, '|') === false) {
-//                        $arr[$item] = $replace;
-//                    }
-//                }
-//            }
-//        } while ();
+//
+//        } while ($this->checkMessageRules($arr) === false);
 
-
+        dump('res = ' . implode('', $arr));
+        if ($this->checkMessageRules($arr)) {
+            $this->day19Array[] = $arr;
+        }
+        return '';
 
         $newLen = strlen($ruleStr);
         for ($i = 0; $i < $newLen; $i++) {
