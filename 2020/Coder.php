@@ -1434,7 +1434,7 @@ class Coder
             $keys = $data[$i];
             do {
                 $one = array_pop($keys);
-            } while(in_array($one, $real));
+            } while (in_array($one, $real));
             $real[$i] = $one;
         }
         ksort($real);
@@ -1472,7 +1472,7 @@ class Coder
     {
         $temp = [];
         $row = count($arr);
-        for($i = 0; $i < $row; $i++) {
+        for ($i = 0; $i < $row; $i++) {
             $temp[$i] = '';
             $column = strlen($arr[$i]);
             for ($j = 0; $j < $column; $j++) {
@@ -1523,9 +1523,9 @@ class Coder
     protected function getAtomNear(array $arr, int $z, int $x, int $y)
     {
         $near = [];
-        for ($i = $z-1; $i <= $z+1; $i++) {
-            for ($j = $x-1; $j <= $x+1; $j++) {
-                for ($k = $y-1; $k <= $y+1; $k++) {
+        for ($i = $z - 1; $i <= $z + 1; $i++) {
+            for ($j = $x - 1; $j <= $x + 1; $j++) {
+                for ($k = $y - 1; $k <= $y + 1; $k++) {
                     if ($i == $z && $j == $x && $k == $y) {
                         continue;
                     } else {
@@ -1587,7 +1587,7 @@ class Coder
                 $sum = $this->calculateHouseWorkOp($sum, $op, $str[$i]);
             } elseif (in_array($str[$i], ['+', '*'])) {
                 $op = $str[$i];
-            } elseif($str[$i] == '(') {
+            } elseif ($str[$i] == '(') {
                 $rightLen = $this->fetchRightParentheses($i, $str);
                 $tempStr = substr($str, $i + 1, $rightLen - 1);
                 $num = $this->calculateHouseWork($tempStr);
@@ -1641,7 +1641,7 @@ class Coder
 
             $l = !$key1 ? '' : substr($str, 0, $key1);
             $r = $key2 >= strlen($str) ? '' : substr($str, $key2 + 1);
-            $str = $l.$num.$r;
+            $str = $l . $num . $r;
 
             $i = strpos($str, $op);
         }
@@ -1659,7 +1659,7 @@ class Coder
 
             $l = substr($str, $start, $i);
             $r = substr($str, $i + $rightLen + 1);
-            $str = $l.$num.$r;
+            $str = $l . $num . $r;
 
             $i = strpos($str, '(');
         }
@@ -1694,4 +1694,243 @@ class Coder
         }
         return [$key, intval($temp)];
     }
+
+    protected $messageRules = [];
+
+    protected function init19()
+    {
+        $this->messageRules = [];
+        $index = array_search('', $this->sourceData);
+        $this->targetData = array_slice($this->sourceData, $index + 1);
+        //
+        $rules = array_slice($this->sourceData, 0, $index);
+        foreach ($rules as $str) {
+            [$i, $ruleStr] = explode(': ', $str);
+            if (preg_match('/\"(.*)\"/', $ruleStr, $matches)) {
+                $temp = $matches[1];
+            } else {
+                $temp = $ruleStr;
+            }
+            $this->messageRules[intval($i)] = $temp;
+        }
+        ksort($this->messageRules);
+    }
+
+    protected function run19Part1()
+    {
+//        dd($this->messageRules);
+        $data = $this->checkMessageRules(['4 1 5']);
+        dd($data);
+
+        $this->fetchMessagesRules($this->messageRules[0]);
+    }
+
+    protected function run19Part2()
+    {
+    }
+
+    protected $day19Array = [];
+
+    protected function fetchMessagesRules(string $str)
+    {
+        $this->day19Array = [];
+        $this->loopMessagesRules($str);
+        dd($this->day19Array);
+    }
+
+    protected function checkMessageRules(array $arr)
+    {
+        foreach ($arr as $v) {
+            if (preg_match('/(![a|b| ]).*/', $v)) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+
+    protected function loopMessagesRules(string $ruleStr, $index = 0, string $args = '')
+    {
+//        $arr = explode(' ', $ruleStr);
+//        do {
+//            foreach ($arr as $item) {
+//                if (!in_array($item, ['a', 'b', ' '])) {
+//                    $replace = $this->messageRules[$item];
+//                    if (strstr($replace, '|') === false) {
+//                        $arr[$item] = $replace;
+//                    }
+//                }
+//            }
+//        } while ();
+
+
+
+        $newLen = strlen($ruleStr);
+        for ($i = 0; $i < $newLen; $i++) {
+            $key = $ruleStr[$i];
+            if (!in_array($key, ['a', 'b', ' '])) {
+                $replace = $this->messageRules[$key];
+                if (strstr($replace, '|') === false) {
+                    $ruleStr[$i] = $replace;
+                }
+            }
+        }
+
+
+        foreach ($arr as $i => $item) {
+            if (in_array($item, ['a', 'b', ' '])) {
+                continue;
+            }
+            $next = $this->messageRules[$item];
+            if (strstr($next, '|') !== false) {
+                $arr = explode(' | ', $next);
+                foreach ($arr as $v) {
+                    $ruleStr[$i] = $v;
+                    $this->loopMessagesRules($ruleStr, $index, $args);
+                }
+                return ;
+            } else {
+                $ruleStr[$i] = $next;
+                $this->loopMessagesRules($ruleStr, $index, $args);
+            }
+        }
+
+
+//        if (strstr($data, '|') !== false) {
+//            $arr = explode(' | ', $data);
+//            foreach ($arr as $item) {
+//                $temp = $args . $item;
+//                $this->loopMessagesRules($temp, $index, $args);
+//                $index++;
+//            }
+//        } elseif (strstr($data, ' ') !== false) {
+//            $arr = explode(' ', $data);
+//            foreach ($arr as $i => $v) {
+//                if (in_array($v, ['a', 'b'])) {
+//                    continue;
+//                }
+//                $next = $this->messageRules[$v];
+//                if (in_array($next, ['a', 'b'])) {
+//                    $arr[$i] = $next;
+//                } else {
+//                    $temp = implode(' ', $arr);
+//                    $this->loopMessagesRules($temp, $index, $args);
+//                    return $temp;
+//                }
+//            }
+//        } else {
+//            $temp = $args . $data;
+//            $this->day19Array[$index] = $temp;
+//            return $temp;
+//        }
+    }
+
+    protected function init20() {}
+
+    protected function run20Part1() {}
+
+    protected function run20Part2() {}
+
+    protected function init21()
+    {
+        foreach ($this->sourceData as $str) {
+            preg_match('/\(contains (.*)\)/', $str, $matches);
+            $foodsStr = str_replace(" {$matches[0]}", '', $str);
+            $foods = explode(' ', $foodsStr);
+            $contains = explode(', ', $matches[1]);
+            $this->targetData[] = [
+                'foods' => $foods,
+                'contains' => $contains,
+            ];
+        }
+    }
+
+    protected function run21Part1()
+    {
+        $data = $this->fetchFoodSafeIngredients($this->targetData);
+        return count($data); //
+    }
+
+    protected function run21Part2() {}
+
+    protected function fetchFoodSafeIngredients(array $arr)
+    {
+        $allergens = $this->fetchFoodAllergens($arr);
+        $foods = [];
+        $contains = [];
+        foreach ($this->targetData as $item) {
+            $foods = array_merge($foods, $item['foods']);
+            $contains = array_merge($contains, $item['contains']);
+        }
+
+        dump(count(array_unique($foods)).'---'.count(array_unique($contains)));
+        dump($allergens);
+
+        $safes = array_diff($foods, $allergens);
+//        dd($safes);
+        return $safes;
+    }
+
+    protected function fetchFoodAllergens(array $arr)
+    {
+        $allergens = [];
+        $len = count($arr);
+        for ($i = 0; $i < $len - 1; $i++) {
+            $item1 = $arr[$i];
+//            dump("=====$i=====");
+            for ($j = $i + 1; $j < $len; $j++) {
+                $item2 = $arr[$j];
+                // both
+                $bothContains = array_intersect($item1['contains'], $item2['contains']);
+                $bothFoods = array_intersect($item1['foods'], $item2['foods']);
+                foreach ($bothContains as $contain) {
+                    foreach ($bothFoods as $food) {
+                        if (isset($allergens[$food])){
+                            if (!in_array($contain, $allergens[$food])) {
+                                $allergens[$food][] = $contain;
+                            }
+                        } else {
+                            $allergens[$food] = [$contain];
+                        }
+                    }
+                }
+                // diff item2 between self
+                $diffContains = array_diff($item2['contains'], $item1['contains']);
+                $diffFoods = array_diff($item2['foods'], $item1['foods']);
+                foreach ($diffContains as $contain) {
+                    foreach ($diffFoods as $food) {
+                        if (isset($allergens[$food])){
+                            if (!in_array($contain, $allergens[$food])) {
+                                $allergens[$food][] = $contain;
+                            }
+                        } else {
+                            $allergens[$food] = [$contain];
+                        }
+                    }
+                }
+            }
+            // diff self between allergens
+            $diffContains = array_diff($item1['contains'], $allergens);
+            $diffFoods = array_diff($item1['foods'], array_keys($allergens));
+            foreach ($diffContains as $contain) {
+                foreach ($diffFoods as $food) {
+                    if (isset($allergens[$food])){
+                        if (!in_array($contain, $allergens[$food])) {
+                            $allergens[$food][] = $contain;
+                        }
+                    } else {
+                        $allergens[$food] = [$contain];
+                    }
+                }
+            }
+//            dump(json_encode($allergens));
+        }
+        return $allergens;
+    }
+
+
+    protected function init22() {}
+
+    protected function run22Part1() {}
+
+    protected function run22Part2() {}
 }

@@ -1,0 +1,5 @@
+<?php
+
+$str = '';
+
+return $str;
