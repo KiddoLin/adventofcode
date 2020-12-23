@@ -1844,11 +1844,95 @@ class Coder
 //        }
     }
 
-    protected function init20() {}
+    protected function init20()
+    {
+        $id = null;
+        $temp = [];
+        foreach ($this->sourceData as $str) {
+            if (empty($str)) {
+                $this->targetData[$id] = $this->getCameraArray($temp);
+                $temp = [];
+            } elseif (preg_match('/^Tile (.*):$/', $str, $matches)) {
+                $id = intval($matches[1]);
+            } else {
+                $temp[] = $str;
+            }
+        }
+    }
 
-    protected function run20Part1() {}
+    protected function getCameraArray(array $arr)
+    {
+        $top = reset($arr);
+        $down = end($arr);
+        $left = '';
+        $right = '';
+        foreach ($arr as $str) {
+            $left .= $str[0];
+            $right .= substr($str, -1);
+        }
+        $data [] = [
+            'top' => $top,
+            'down' => $down,
+            'left' => $left,
+            'right' => $right,
+        ];
+        $data [] = [
+            'top' => strrev($top),
+            'down' => strrev($down),
+            'left' => $left,
+            'right' => $right,
+        ];
+        $data [] = [
+            'top' => $top,
+            'down' => $down,
+            'left' => strrev($left),
+            'right' => strrev($right),
+        ];
+        $data [] = [
+            'top' => strrev($top),
+            'down' => strrev($down),
+            'left' => strrev($left),
+            'right' => strrev($right),
+        ];
+        return $data;
+    }
+
+    protected function run20Part1()
+    {
+        dd($this->targetData);
+        $data = [];
+        foreach ($this->targetData as $id => $arr) {
+            if ($this->checkOutermost($id)) {
+                $data[] = $id;
+            }
+        }
+        dd($data);
+    }
 
     protected function run20Part2() {}
+
+    protected function checkOutermost($id)
+    {
+        $data = $this->targetData;
+        unset($data[$id]);
+        $num = 0;
+        foreach ($this->targetData[$id] as $str) {
+            $isOut = true;
+            foreach ($data as $arr) {
+                if (in_array($str, $arr)) {
+                    $isOut = false;
+                    break;
+                }
+            }
+            if ($isOut) {
+                $num++;
+            }
+            if ($num >= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     protected function init21()
     {
