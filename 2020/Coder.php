@@ -2142,14 +2142,31 @@ class Coder
     protected function run23Part1()
     {
         $arr = $this->targetData;
-        $arr = [3, 8, 9, 1, 2, 5, 4, 6, 7];
-        $data = $this->moveCups($arr);
-        dd(json_encode($data));
+        $final = $this->moveCups($arr, 100);
+        $index = array_search(1, $final);
+        $temp = $this->fixCupsLocation($final, count($final) - $index);
+        $data = array_slice($temp, 1);
+        $num = implode('', $data);
+        return intval($num); // 24798635
     }
 
     protected function run23Part2()
     {
-
+        $arr = $this->targetData;
+        $arr = [3, 8, 9, 1, 2, 5, 4, 6, 7];
+//        for ($i = 10; $i <= 1000000; $i++) {
+//            $arr[] = $i;
+//        }
+        $data = [];
+        for ($i = 0; $i <= 10000; $i++) {
+            $final = $this->moveCups($arr, $i);
+            $temp = json_encode($final);
+            dump("$i  " . $temp);
+            if (!in_array($temp, $data)) {
+                $data[] = $temp;
+            }
+        }
+        dd($temp);
     }
 
     protected function moveCups(array $arr, int $num = 10)
@@ -2158,16 +2175,14 @@ class Coder
         $length = count($arr);
         $offset = 0;
 
-        do {
-            dump("-- move $times --");
-            dump(json_encode($arr));
+        while ($times <= $num) {
             $arr = $this->clockwiseCups($arr, $offset);
             $offset++;
             if ($offset >= $length) {
                 $offset = 0;
             }
             $times++;
-        } while ($times <= $num);
+        }
 
         return $arr;
     }
@@ -2178,15 +2193,14 @@ class Coder
 
         // current cup
         $currentValue = $arr[$currentIndex];
+        $threeIndex = ($currentIndex + 3) % $length;
         // pick up three cups
-        if ($currentIndex + 3 >= $length) {
-            $threePath1 = array_slice($arr, $currentIndex + 1);
+        if ($threeIndex < 3) {
+            $threePath1 = $currentIndex + 1 >= $length ? [] : array_slice($arr, $currentIndex + 1);
             $threePath2 = array_slice($arr, 0, 3 - count($threePath1));
             $three = array_merge($threePath1, $threePath2);
-            $threeIndex = count($threePath2) - 1;
         } else {
             $three = array_slice($arr, $currentIndex + 1, 3);
-            $threeIndex = $currentIndex + 3;
         }
         // others cups
         $notPicks = array_diff($arr, $three, [$currentValue]);
@@ -2201,9 +2215,6 @@ class Coder
         if (empty($destinationValue)) {
             $destinationValue = max($notPicks);
         }
-        dump("current $currentValue");
-        dump("three ". json_encode($three));
-        dump("destination $destinationValue ");
         $destinationIndex = array_search($destinationValue, $arr);
         // new arr
         if ($destinationIndex >= $currentIndex) {
@@ -2212,8 +2223,9 @@ class Coder
             $four = array_slice($arr, $destinationIndex + 1);
             $data = array_merge($one, $two, $three, $four);
         } else {
-            $one = $currentIndex + 3 < $length ? array_slice($arr, $currentIndex + 4) : [];
-            $two = array_slice($arr, $threeIndex + 1, $destinationIndex - $threeIndex - 1);
+            $one = $currentIndex + 4 < $length ? array_slice($arr, $currentIndex + 4) : [];
+            $start = $threeIndex < 3 ? $threeIndex + 1 : 0;
+            $two = array_slice($arr, $start, $destinationIndex - $start + 1);
             $four = array_slice($arr, $destinationIndex + 1,$currentIndex - $destinationIndex - 1);
             $data = array_merge([$currentValue], $one, $two, $three, $four);
             $data = $this->fixCupsLocation($data, $currentIndex);
@@ -2233,10 +2245,61 @@ class Coder
         return $data;
     }
 
-    protected function getAndRemove(array &$arr, $index)
+    protected function moveCups2(array $arr, int $num = 10000000)
     {
-        $temp = $arr[$index];
-        unset($arr[$index]);
-        return $temp;
+        $times = 1;
+        $length = count($arr);
+        $currentIndex = 0;
+        do {
+            // current cup
+            $currentValue = $currentIndex < $length ? $arr[$currentIndex] : $currentIndex;
+            $threeIndex = ($currentIndex + 3) % $length;
+            // pick up three cups
+            if ($threeIndex < 3) {
+                $threePath1 = $currentIndex + 1 >= $length ? [] : array_slice($arr, $currentIndex + 1);
+                $threePath2 = array_slice($arr, 0, 3 - count($threePath1));
+                $three = array_merge($threePath1, $threePath2);
+            } else {
+                $three = array_slice($arr, $currentIndex + 1, 3);
+            }
+            // others cups
+            $notPicks = array_diff($arr, $three, [$currentValue]);
+            // destination
+            $destinationValue = null;
+            for ($i = $currentValue - 1; $i > 0; $i--) {
+                if (!in_array($i, $three)) {
+                    $destinationValue = $i;
+                    break;
+                }
+            }
+            if (empty($destinationValue)) {
+                $destinationValue = max($notPicks);
+            }
+            $destinationIndex = array_search($destinationValue, $arr);
+            // new arr
+            if ($destinationIndex >= $currentIndex) {
+                $one = array_slice($arr, 0, $currentIndex + 1);
+                $two = array_slice($arr, $currentIndex + 4, $destinationIndex - $currentIndex - 3);
+                $four = array_slice($arr, $destinationIndex + 1);
+                $data = array_merge($one, $two, $three, $four);
+            } else {
+                $one = $currentIndex + 4 < $length ? array_slice($arr, $currentIndex + 4) : [];
+                $start = $threeIndex < 3 ? $threeIndex + 1 : 0;
+                $two = array_slice($arr, $start, $destinationIndex - $start + 1);
+                $four = array_slice($arr, $destinationIndex + 1,$currentIndex - $destinationIndex - 1);
+                $data = array_merge([$currentValue], $one, $two, $three, $four);
+                $data = $this->fixCupsLocation($data, $currentIndex);
+            }
+
+            $arr = $data;
+
+            $currentIndex++;
+            if ($currentIndex >= 1000000) {
+                $currentIndex = $currentIndex % 1000000;
+            }
+            $times++;
+        } while ($times <= $num);
+
+        return $arr;
     }
 }
