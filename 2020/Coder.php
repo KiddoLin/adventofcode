@@ -1695,31 +1695,50 @@ class Coder
         return [$key, intval($temp)];
     }
 
+    protected $messageBases = [];
     protected $messageRules = [];
 
     protected function init19()
     {
         $this->messageRules = [];
         $index = array_search('', $this->sourceData);
-        $this->targetData = array_slice($this->sourceData, $index + 1);
-        //
+        // rules
+        $bases = [];
         $rules = array_slice($this->sourceData, 0, $index);
         foreach ($rules as $str) {
             [$i, $ruleStr] = explode(': ', $str);
             if (preg_match('/\"(.*)\"/', $ruleStr, $matches)) {
-                $temp = $matches[1];
+                $this->messageBases[$matches[1]] = intval($i);
+            } elseif (strstr($ruleStr, '|') !== false) {
+                $this->messageRules[intval($i)] = explode(' | ', $ruleStr);
             } else {
-                $temp = $ruleStr;
+                $bases[intval($i)] = $ruleStr;
             }
-            $this->messageRules[intval($i)] = $temp;
         }
         ksort($this->messageRules);
+        // target
+        $target = array_slice($this->sourceData, $index + 1);
+        foreach ($target as $str) {
+            $arr = str_split($str);
+            $temp = [];
+            foreach ($arr as $alphabet) {
+                $temp[] = $this->messageBases[$alphabet];
+            }
+            $this->targetData[] = $temp;
+        }
+
+        dd($bases);
     }
 
     protected function run19Part1()
     {
-//        dd($this->messageRules);
-        $this->fetchMessagesRules($this->messageRules[0]);
+        $total = 0;
+        foreach ($this->targetData as $arr) {
+            if ($this->checkWithMessagesRules($arr)) {
+                $total++;
+            }
+        }
+        return $total;
     }
 
     protected function run19Part2()
@@ -1728,11 +1747,40 @@ class Coder
 
     protected $day19Array = [];
 
+    protected function checkWithMessagesRules(array $arr)
+    {
+        $num = array_pop($arr);
+
+        $data = [];
+        foreach ($this->messageRules as $i => $rules) {
+            foreach ($rules as $rule) {
+                $temp = explode(' ', $rule);
+                if (array_pop($temp) == $num) {
+                    $data[] = $rule;
+                }
+            }
+        }
+
+        dd($data);
+
+        do {
+            foreach ($data as $rule) {
+
+            }
+        } while(true);
+    }
+
+    protected function checkMessageEnd(array $arr, int $index)
+    {
+
+    }
+
     protected function fetchMessagesRules(string $str)
     {
         $this->day19Array = [];
         $this->loopMessagesRules($str);
         dd($this->day19Array);
+        return $this->day19Array;
     }
 
     protected function checkMessageRules(array $arr)
@@ -1741,107 +1789,53 @@ class Coder
             if (!in_array($v, ['a', 'b'])) {
                 return false;
             }
-//            $temp = explode(' ', $v);
-//            $count = array_keys(array_count_values($temp));
-//            $diff = array_diff($count, ['a', 'b']);
-//            if (count($diff)) {
-//                return false;
-//            }
         }
         return true;
     }
 
-    protected function loopMessagesRules(string $ruleStr, $index = 0, string $args = '')
+    protected function loopMessagesRules(string $ruleStr)
     {
         dump('str = ' . $ruleStr);
         $arr = explode(' ', $ruleStr);
 
+        $data = [$arr];
+
         foreach ($arr as $key => $item) {
             if (!in_array($item, ['a', 'b', ' '])) {
                 $replace = $this->messageRules[$item];
+                dump("replace = $replace");
                 if (strstr($replace, '|') === false) {
-                    $arr[$key] = $replace;
+                    foreach ($data as $i => $r) {
+                        $data[$i][$key] = $replace;
+                    }
                 } else {
                     $temp = explode(' | ', $replace);
                     foreach ($temp as $s) {
                         $arr[$key] = $s;
                         $n = implode(' ', $arr);
                         dump('or == '.$n);
-                        $this->loopMessagesRules($n);
+                        foreach ($data as $i => $r) {
+                            $r[$key] = $s;
+                            $data[$i][$key] = $s;
+                        }
                     }
                 }
             }
         }
 
+        $this->loopMessagesRules($n);
 
-//        do {
-//
-//        } while ($this->checkMessageRules($arr) === false);
-
-        dump('res = ' . implode('', $arr));
+        $res = implode('', $arr);
         if ($this->checkMessageRules($arr)) {
-            $this->day19Array[] = $arr;
-        }
-        return '';
-
-        $newLen = strlen($ruleStr);
-        for ($i = 0; $i < $newLen; $i++) {
-            $key = $ruleStr[$i];
-            if (!in_array($key, ['a', 'b', ' '])) {
-                $replace = $this->messageRules[$key];
-                if (strstr($replace, '|') === false) {
-                    $ruleStr[$i] = $replace;
-                }
+            if (!in_array($res, $this->day19Array)) {
+                dump('res = ' . implode('', $arr));
+                $this->day19Array[] = $res;
             }
+        } else {
+            $res = implode(' ', $arr);
+//            dd($res);
+            $this->loopMessagesRules($res);
         }
-
-
-        foreach ($arr as $i => $item) {
-            if (in_array($item, ['a', 'b', ' '])) {
-                continue;
-            }
-            $next = $this->messageRules[$item];
-            if (strstr($next, '|') !== false) {
-                $arr = explode(' | ', $next);
-                foreach ($arr as $v) {
-                    $ruleStr[$i] = $v;
-                    $this->loopMessagesRules($ruleStr, $index, $args);
-                }
-                return ;
-            } else {
-                $ruleStr[$i] = $next;
-                $this->loopMessagesRules($ruleStr, $index, $args);
-            }
-        }
-
-
-//        if (strstr($data, '|') !== false) {
-//            $arr = explode(' | ', $data);
-//            foreach ($arr as $item) {
-//                $temp = $args . $item;
-//                $this->loopMessagesRules($temp, $index, $args);
-//                $index++;
-//            }
-//        } elseif (strstr($data, ' ') !== false) {
-//            $arr = explode(' ', $data);
-//            foreach ($arr as $i => $v) {
-//                if (in_array($v, ['a', 'b'])) {
-//                    continue;
-//                }
-//                $next = $this->messageRules[$v];
-//                if (in_array($next, ['a', 'b'])) {
-//                    $arr[$i] = $next;
-//                } else {
-//                    $temp = implode(' ', $arr);
-//                    $this->loopMessagesRules($temp, $index, $args);
-//                    return $temp;
-//                }
-//            }
-//        } else {
-//            $temp = $args . $data;
-//            $this->day19Array[$index] = $temp;
-//            return $temp;
-//        }
     }
 
     protected function init20()
@@ -2031,10 +2025,112 @@ class Coder
         return $allergens;
     }
 
+    protected function init22()
+    {
+        $i = null;
+        foreach ($this->sourceData as $str) {
+            if (empty($str)) {
+                continue;
+            }
+            if (preg_match('/Player (.*):/', $str, $matches)) {
+                $i = $matches[1] - 1;
+            } else {
+                $this->targetData[$i][] = intval($str);
+            }
+        }
+    }
 
-    protected function init22() {}
+    protected function run22Part1()
+    {
+        [$player1, $player2] = $this->targetData;
+        $data = $this->vsPlayer($player1, $player2);
+        $total = $this->calculateCardResultPoints($data['result']);
+        return $total; // 32856
+    }
 
-    protected function run22Part1() {}
+    protected function run22Part2()
+    {
+        [$player1, $player2] = $this->targetData;
+        $data = $this->vsPlayer2($player1, $player2);
+        $total = $this->calculateCardResultPoints($data['result']);
+        return $total; // 33805
+    }
 
-    protected function run22Part2() {}
+    protected function calculateCardResultPoints(array $arr)
+    {
+        $result = array_reverse($arr);
+        $total = 0;
+        foreach ($result as $i => $v) {
+            $total += ($v * ($i + 1));
+        }
+        return $total;
+    }
+
+    protected function vsPlayer($player1, $player2)
+    {
+        $times = 0;
+        while (count($player1) && count($player2)) {
+            $first1 = array_shift($player1);
+            $first2 = array_shift($player2);
+            if ($first1 >= $first2) {
+                array_push($player1, $first1, $first2);
+            } else {
+                array_push($player2, $first2, $first1);
+            }
+            $times++;
+        }
+        $data = [
+            'times' => $times,
+        ];
+        if (count($player1)) {
+            $data['winner'] = 1;
+            $data['result'] = $player1;
+        } else {
+            $data['winner'] = 2;
+            $data['result'] = $player2;
+        }
+        return $data;
+    }
+
+    protected function vsPlayer2($player1, $player2): array
+    {
+        $player1Cards = [];
+        $player2Cards = [];
+
+        while (count($player1) && count($player2)) {
+            $temp1 = implode(',', $player1);
+            $temp2 = implode(',', $player2);
+            if (in_array($temp1, $player1Cards) || in_array($temp2, $player2Cards)) {
+                return ['winner' => 1, 'result' => $player1];
+            }
+            $player1Cards[] = $temp1;
+            $player2Cards[] = $temp2;
+
+            $first1 = array_shift($player1);
+            $first2 = array_shift($player2);
+
+            if ($first1 <= count($player1) && $first2 <= count($player2)) {
+                $new1 = array_slice($player1, 0, $first1);
+                $new2 = array_slice($player2, 0, $first2);
+                $result = $this->vsPlayer2($new1, $new2);
+                if ($result['winner'] == 1) {
+                    array_push($player1, $first1, $first2);
+                } else {
+                    array_push($player2, $first2, $first1);
+                }
+            } else {
+                if ($first1 >= $first2) {
+                    array_push($player1, $first1, $first2);
+                } else {
+                    array_push($player2, $first2, $first1);
+                }
+            }
+        }
+
+        if (count($player1)) {
+            return ['winner' => 1, 'result' => $player1];
+        } else {
+            return ['winner' => 2, 'result' => $player2];
+        }
+    }
 }
