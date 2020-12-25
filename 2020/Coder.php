@@ -2133,4 +2133,110 @@ class Coder
             return ['winner' => 2, 'result' => $player2];
         }
     }
+
+    protected function init23()
+    {
+        $this->targetData = str_split($this->sourceData[0]);
+    }
+
+    protected function run23Part1()
+    {
+        $arr = $this->targetData;
+        $arr = [3, 8, 9, 1, 2, 5, 4, 6, 7];
+        $data = $this->moveCups($arr);
+        dd(json_encode($data));
+    }
+
+    protected function run23Part2()
+    {
+
+    }
+
+    protected function moveCups(array $arr, int $num = 10)
+    {
+        $times = 1;
+        $length = count($arr);
+        $offset = 0;
+
+        do {
+            dump("-- move $times --");
+            dump(json_encode($arr));
+            $arr = $this->clockwiseCups($arr, $offset);
+            $offset++;
+            if ($offset >= $length) {
+                $offset = 0;
+            }
+            $times++;
+        } while ($times <= $num);
+
+        return $arr;
+    }
+
+    protected function clockwiseCups(array $arr, int $currentIndex)
+    {
+        $length = count($arr);
+
+        // current cup
+        $currentValue = $arr[$currentIndex];
+        // pick up three cups
+        if ($currentIndex + 3 >= $length) {
+            $threePath1 = array_slice($arr, $currentIndex + 1);
+            $threePath2 = array_slice($arr, 0, 3 - count($threePath1));
+            $three = array_merge($threePath1, $threePath2);
+            $threeIndex = count($threePath2) - 1;
+        } else {
+            $three = array_slice($arr, $currentIndex + 1, 3);
+            $threeIndex = $currentIndex + 3;
+        }
+        // others cups
+        $notPicks = array_diff($arr, $three, [$currentValue]);
+        // destination
+        $destinationValue = null;
+        for ($i = $currentValue - 1; $i > 0; $i--) {
+            if (!in_array($i, $three)) {
+                $destinationValue = $i;
+                break;
+            }
+        }
+        if (empty($destinationValue)) {
+            $destinationValue = max($notPicks);
+        }
+        dump("current $currentValue");
+        dump("three ". json_encode($three));
+        dump("destination $destinationValue ");
+        $destinationIndex = array_search($destinationValue, $arr);
+        // new arr
+        if ($destinationIndex >= $currentIndex) {
+            $one = array_slice($arr, 0, $currentIndex + 1);
+            $two = array_slice($arr, $currentIndex + 4, $destinationIndex - $currentIndex - 3);
+            $four = array_slice($arr, $destinationIndex + 1);
+            $data = array_merge($one, $two, $three, $four);
+        } else {
+            $one = $currentIndex + 3 < $length ? array_slice($arr, $currentIndex + 4) : [];
+            $two = array_slice($arr, $threeIndex + 1, $destinationIndex - $threeIndex - 1);
+            $four = array_slice($arr, $destinationIndex + 1,$currentIndex - $destinationIndex - 1);
+            $data = array_merge([$currentValue], $one, $two, $three, $four);
+            $data = $this->fixCupsLocation($data, $currentIndex);
+        }
+        return $data;
+    }
+
+    protected function fixCupsLocation(array $arr, int $index)
+    {
+        $length = count($arr);
+        $data = [];
+        for ($i = 0; $i < $length; $i++) {
+            $key = ($i + $index) % $length;
+            $data[$key] = $arr[$i];
+        }
+        ksort($data);
+        return $data;
+    }
+
+    protected function getAndRemove(array &$arr, $index)
+    {
+        $temp = $arr[$index];
+        unset($arr[$index]);
+        return $temp;
+    }
 }
