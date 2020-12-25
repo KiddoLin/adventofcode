@@ -20,7 +20,7 @@ function dump(...$args)
 
 function loadData(int $no)
 {
-    $str = require_once("./{$no}.php");
+    $str = require_once("./input/{$no}.php");
     $data = explode(PHP_EOL, $str);
     return $data;
 }
